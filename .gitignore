@@ -4,4 +4,4 @@
 .venv
 .env
 #--------------------------------
-db.sqlite
+db.sqlite3
