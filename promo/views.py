@@ -1,6 +1,9 @@
 import requests
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .api import fetch_and_save_promo
 from .models import Promo, PromoEntry
 from .serializers import PromoSerializer, PromoEntrySerializer
 from django.utils import timezone
@@ -69,6 +72,15 @@ class PromoViewSet(viewsets.ViewSet):
 
         promo.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+# **************************************************
+class FetchPromoView(APIView):
+    def get(self, request):
+        promo_entry = fetch_and_save_promo()
+        if promo_entry:
+            serializer = PromoEntrySerializer(promo_entry)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"detail": "Failed to fetch promo."}, status=status.HTTP_400_BAD_REQUEST)
 
 # ************ xisoblash ***********************
 class PromoCountViewSet(viewsets.ViewSet):

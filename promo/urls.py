@@ -4,9 +4,10 @@ from .views import *
 
 router = DefaultRouter()
 router.register(r'promo', PromoViewSet, basename='promo')
-router.register(r'promo-entries', PromoCountViewSet, basename='promo-entry')
+# router.register(r'promo-entries', PromoCountViewSet, basename='promo-entry')
 
 urlpatterns = [
     path('', include(router.urls)),
     path('promo-entries/calculate/', PromoCountViewSet.as_view({'get': 'calculate_codes'}),),
+    path('fetch-promo/', FetchPromoView.as_view(),),
 ]
