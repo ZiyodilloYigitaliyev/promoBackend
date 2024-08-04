@@ -4,7 +4,7 @@ from .views import *
 
 router = DefaultRouter()
 router.register(r'promo', PromoViewSet, basename='promo')
-# router.register(r'promo-entries', PromoCountViewSet, basename='promo-entry')
+# router.register(r'promo-entries', PromoCountViewSet,)
 
 urlpatterns = [
     path('', include(router.urls)),
