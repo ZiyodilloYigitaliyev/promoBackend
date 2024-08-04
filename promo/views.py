@@ -80,7 +80,7 @@ class FetchPromoView(APIView):
             serializer = PromoEntrySerializer(promo_entry)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
-            return Response({"detail": "Failed to fetch promo."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Promo code already exists or failed to fetch promo."}, status=status.HTTP_400_BAD_REQUEST)
 
 # ************ xisoblash ***********************
 class PromoCountViewSet(viewsets.ViewSet):
