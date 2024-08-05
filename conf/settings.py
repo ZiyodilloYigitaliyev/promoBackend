@@ -135,7 +135,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
+if os.environ.get('DJANGO_COLLECTSTATIC_YES', 'no') == 'yes':
+    COLLECTSTATIC_CONFIRM = 'yes'
+else:
+    COLLECTSTATIC_CONFIRM = 'no'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
