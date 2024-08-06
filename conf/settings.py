@@ -27,7 +27,11 @@ SECRET_KEY = 'django-insecure-ls6-)x875h#o*j+x=_4kitj!5tg=c-u7o7ppiog_h$h(#ei0b-
 # DEBUG = True
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://dolphin-app-gpout.ondigitalocean.app/']
+ALLOWED_HOSTS = ['dolphin-app-gpout.ondigitalocean.app', 'localhost', '127.0.0.1']
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
 
 
 # Application definition
