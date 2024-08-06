@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-ls6-)x875h#o*j+x=_4kitj!5tg=c-u7o7ppiog_h$h(#ei0b-
 # DEBUG = True
 DEBUG = False
 
-ALLOWED_HOSTS = ['*', 'dolphin-app-gpout.ondigitalocean.app']
+ALLOWED_HOSTS = ['https://dolphin-app-gpout.ondigitalocean.app/']
 
 
 # Application definition
