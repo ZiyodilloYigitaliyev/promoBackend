@@ -3,6 +3,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.db.models import Count
+from datetime import timedelta
+
 from .api import fetch_and_save_promo
 from .models import Promo, PromoEntry
 from .serializers import PromoSerializer, PromoEntrySerializer
@@ -87,20 +90,29 @@ class PromoCountViewSet(viewsets.ViewSet):
 
     def calculate_codes(self, request):
         """
-        GET so'rovi: Barcha promo kodlar sonini hisoblab, 3149 ga ko'paytiradi va barcha telefon raqamlar sonini qaytaradi.
+        GET so'rovi: Promo kodlar va telefon raqamlarni hisoblab, ma'lum vaqt oralig'iga ko'ra filterlaydi.
         """
-        # PromoEntry modeli orqali barcha kodlarni olish
-        entries = PromoEntry.objects.all()
-        code_count = entries.count()
+        filter_by = request.query_params.get('filter_by', 'day')
+
+        if filter_by == 'month':
+            start_date = timezone.now() - timedelta(days=30)
+        elif filter_by == 'week':
+            start_date = timezone.now() - timedelta(weeks=1)
+        else:  # 'day' yoki default holat
+            start_date = timezone.now() - timedelta(days=1)
+
+        # Tanlangan vaqt oralig'iga ko'ra filterlash
+        filtered_entries = PromoEntry.objects.filter(created_at__gte=start_date)
+        code_count = filtered_entries.count()
         multiplied_value = code_count * 3149
 
-        # Promo modeli orqali barcha telefon raqamlarni hisoblash
-        total_tel_count = Promo.objects.count()
+        # Promo modeli orqali barcha noyob telefon raqamlarini hisoblash
+        total_tel_count = Promo.objects.filter(promos__created_at__gte=start_date).distinct().count()
 
         result = {
             'code_count': code_count,
-            'multiplied_value': multiplied_value,
-            'users': total_tel_count  # Barcha telefon raqamlar soni
+            'sum': multiplied_value,
+            'users': total_tel_count
         }
 
         return Response(result, status=status.HTTP_200_OK)
