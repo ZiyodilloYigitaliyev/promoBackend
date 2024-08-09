@@ -73,7 +73,7 @@ MIDDLEWARE = [
 ]
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # React'ning lokal serveri
-    "https://main--barakaadmin.netlify.app/",  # Boshqa lokal domen varianti
+    "https://main--barakaadmin.netlify.app",  # Boshqa lokal domen varianti
 
 ]
 
