@@ -87,15 +87,20 @@ class PromoCountViewSet(viewsets.ViewSet):
 
     def calculate_codes(self, request):
         """
-        GET so'rovi: Barcha promo kodlar sonini hisoblab, 3149 ga ko'paytiradi.
+        GET so'rovi: Barcha promo kodlar sonini hisoblab, 3149 ga ko'paytiradi va barcha telefon raqamlar sonini qaytaradi.
         """
+        # PromoEntry modeli orqali barcha kodlarni olish
         entries = PromoEntry.objects.all()
         code_count = entries.count()
         multiplied_value = code_count * 3149
 
+        # Promo modeli orqali barcha telefon raqamlarni hisoblash
+        total_tel_count = Promo.objects.count()
+
         result = {
             'code_count': code_count,
-            'multiplied_value': multiplied_value
+            'multiplied_value': multiplied_value,
+            'users': total_tel_count  # Barcha telefon raqamlar soni
         }
 
         return Response(result, status=status.HTTP_200_OK)
