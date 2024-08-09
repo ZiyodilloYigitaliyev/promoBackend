@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'user',
     # installed apps #
     'rest_framework',
+    'corsheaders',
 
 ]
 REST_FRAMEWORK = {
@@ -59,6 +60,8 @@ REST_FRAMEWORK = {
 
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # CORS Middleware
+    'django.middleware.common.CommonMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -68,6 +71,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # React'ning lokal serveri
+    "https://main--barakaadmin.netlify.app/",  # Boshqa lokal domen varianti
+
+]
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 ROOT_URLCONF = 'conf.urls'
 
