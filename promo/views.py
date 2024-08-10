@@ -85,30 +85,101 @@ class PromoMonthlyView(APIView):
 
         # Agar month va year parametrlar kiritilgan bo'lsa
         if month and year:
-            month_name = datetime.strptime(month, "%m").strftime("%B").lower()
-            promos_in_month = Promo.objects.filter(
-                promos__created_at__month=int(month),
-                promos__created_at__year=int(year)
-            ).distinct()
+            try:
+                month = int(month)
+                year = int(year)
+                # Oyni va yilni tekshirish
+                if month < 1 or month > 12:
+                    raise ValueError("Month must be between 1 and 12.")
+                if year < 1900:
+                    raise ValueError("Year must be greater than 1900.")
 
-            result = {
-                month_name: PromoSerializer(promos_in_month, many=True).data
-            }
+                start_date = timezone.make_aware(timezone.datetime(year, month, 1))
+                end_date = timezone.make_aware(
+                    timezone.datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59))
+
+                # Promo kodlar
+                promos_in_month = PromoEntry.objects.filter(
+                    created_at__range=(start_date, end_date)
+                ).select_related('promo')
+
+                # Foydalanuvchilar
+                users_in_month = Promo.objects.filter(
+                    promos__created_at__range=(start_date, end_date)
+                ).distinct()
+
+                # Promolarni guruhlash
+                promos_grouped = {}
+                for entry in promos_in_month:
+                    promo = entry.promo
+                    if promo not in promos_grouped:
+                        promos_grouped[promo] = []
+                    promos_grouped[promo].append({
+                        "id": entry.id,
+                        "code": entry.code,
+                        "created_at": entry.created_at.isoformat()
+                    })
+
+                result = {
+                    "month": calendar.month_name[month].lower(),
+                    "promos": {
+                        promo.tel: {
+                            "sent_count": len(promos),
+                            "promos": promos
+                        }
+                        for promo, promos in promos_grouped.items()
+                    },
+                    "users": users_in_month.count()
+                }
+            except ValueError as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             # Agar month va year parametrlar kiritilmagan bo'lsa, barcha oylardagi ma'lumotlarni qaytaradi
             entries = PromoEntry.objects.annotate(month=TruncMonth('created_at')).values('month').distinct()
 
             result = {}
             for entry in entries:
-                month_name = entry['month'].strftime("%B").lower()
-                promos_in_month = Promo.objects.filter(
-                    promos__created_at__month=entry['month'].month,
-                    promos__created_at__year=entry['month'].year
+                month = entry['month']
+                month_name = month.strftime("%B").lower()
+                start_date = timezone.make_aware(timezone.datetime(month.year, month.month, 1))
+                end_date = timezone.make_aware(
+                    timezone.datetime(month.year, month.month, calendar.monthrange(month.year, month.month)[1], 23, 59,
+                                      59))
+
+                # Promo kodlar
+                promos_in_month = PromoEntry.objects.filter(
+                    created_at__range=(start_date, end_date)
+                ).select_related('promo')
+
+                # Foydalanuvchilar
+                users_in_month = Promo.objects.filter(
+                    promos__created_at__range=(start_date, end_date)
                 ).distinct()
 
-                result[month_name] = PromoSerializer(promos_in_month, many=True).data
+                # Promolarni guruhlash
+                promos_grouped = {}
+                for entry in promos_in_month:
+                    promo = entry.promo
+                    if promo not in promos_grouped:
+                        promos_grouped[promo] = []
+                    promos_grouped[promo].append({
+                        "id": entry.id,
+                        "code": entry.code,
+                        "created_at": entry.created_at.isoformat()
+                    })
 
-        return Response(result, status=200)
+                result[month_name] = {
+                    "promos": {
+                        promo.tel: {
+                            "sent_count": len(promos),
+                            "promos": promos
+                        }
+                        for promo, promos in promos_grouped.items()
+                    },
+                    "users": users_in_month.count()
+                }
+
+        return Response(result, status=status.HTTP_200_OK)
 
 # ********************* Fetch Api *****************************
 class FetchPromoView(APIView):
