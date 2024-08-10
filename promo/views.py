@@ -5,8 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models.functions import TruncMonth
 from django.db.models import Count
-from django.views.decorators.cache import cache_page
-from django.utils.decorators import method_decorator
+import calendar
 from datetime import timedelta, datetime
 from .api import fetch_and_save_promo
 from .models import Promo, PromoEntry
@@ -124,27 +123,48 @@ class FetchPromoView(APIView):
 # ************ xisoblash ***********************
 class PromoCountViewSet(viewsets.ViewSet):
 
-    @method_decorator(cache_page(60*60))  # Cache qilish 1 soatga mo'ljallangan
     def calculate_codes(self, request):
         """
         GET so'rovi: Promo kodlar va telefon raqamlarni hisoblab, ma'lum vaqt oralig'iga ko'ra filterlaydi.
         """
-        filter_by = request.query_params.get('filter_by', 'day')
+        # Parametrlarni olish
+        month = request.query_params.get('month')
+        year = request.query_params.get('year')
 
-        if filter_by == 'month':
-            start_date = timezone.now() - timedelta(days=30)
-        elif filter_by == 'week':
-            start_date = timezone.now() - timedelta(weeks=1)
-        else:  # 'day' yoki default holat
-            start_date = timezone.now() - timedelta(days=1)
+        if month and year:
+            try:
+                month = int(month)
+                year = int(year)
+                # Oyni va yilni tekshirish
+                if month < 1 or month > 12:
+                    raise ValueError("Month must be between 1 and 12.")
+                if year < 1900:
+                    raise ValueError("Year must be greater than 1900.")
 
-        # Tanlangan vaqt oralig'iga ko'ra filterlash
-        filtered_entries = PromoEntry.objects.filter(created_at__gte=start_date)
-        code_count = filtered_entries.count()
+                # O'sha oy va yil uchun boshlanish va tugash vaqtlarini aniqlash
+                start_date = timezone.make_aware(timezone.datetime(year, month, 1))
+                end_date = timezone.make_aware(
+                    timezone.datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59))
+
+                # Filtrlangan promo kodlar
+                filtered_entries = PromoEntry.objects.filter(created_at__range=(start_date, end_date))
+                code_count = filtered_entries.count()
+            except ValueError as e:
+                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # Agar month va year parametrlar ko'rsatilmagan bo'lsa, barcha vaqt bo'yicha ma'lumotlar
+            filtered_entries = PromoEntry.objects.all()
+            code_count = filtered_entries.count()
+            start_date = None  # Barcha vaqt
+            end_date = None
+
         multiplied_value = code_count * 3149
 
         # Barcha noyob telefon raqamlarini hisoblash
-        total_tel_count = Promo.objects.filter(promos__created_at__gte=start_date).distinct().count()
+        if start_date and end_date:
+            total_tel_count = Promo.objects.filter(promos__created_at__range=(start_date, end_date)).distinct().count()
+        else:
+            total_tel_count = Promo.objects.distinct().count()
 
         result = {
             'code_count': code_count,
