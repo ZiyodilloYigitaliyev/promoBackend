@@ -1,11 +1,11 @@
 import requests
+
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.db.models.functions import TruncMonth
 from django.db.models import Count
-from datetime import timedelta
-
+from datetime import timedelta, datetime
 from .api import fetch_and_save_promo
 from .models import Promo, PromoEntry
 from .serializers import PromoSerializer, PromoEntrySerializer
@@ -75,7 +75,41 @@ class PromoViewSet(viewsets.ViewSet):
 
         promo.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-# **************************************************
+#     ********************* Monthly date *************************
+class PromoMonthlyView(APIView):
+    def get(self, request):
+        # URL parametrlarini olish
+        month = request.query_params.get('month')
+        year = request.query_params.get('year')
+
+        # Agar month va year parametrlar kiritilgan bo'lsa
+        if month and year:
+            month_name = datetime.strptime(month, "%m").strftime("%B").lower()
+            promos_in_month = Promo.objects.filter(
+                promos__created_at__month=int(month),
+                promos__created_at__year=int(year)
+            ).distinct()
+
+            result = {
+                month_name: PromoSerializer(promos_in_month, many=True).data
+            }
+        else:
+            # Agar month va year parametrlar kiritilmagan bo'lsa, barcha oylardagi ma'lumotlarni qaytaradi
+            entries = PromoEntry.objects.annotate(month=TruncMonth('created_at')).values('month').distinct()
+
+            result = {}
+            for entry in entries:
+                month_name = entry['month'].strftime("%B").lower()
+                promos_in_month = Promo.objects.filter(
+                    promos__created_at__month=entry['month'].month,
+                    promos__created_at__year=entry['month'].year
+                ).distinct()
+
+                result[month_name] = PromoSerializer(promos_in_month, many=True).data
+
+        return Response(result, status=200)
+
+# ********************* Fetch Api *****************************
 class FetchPromoView(APIView):
     def get(self, request):
         promo_entry = fetch_and_save_promo()
