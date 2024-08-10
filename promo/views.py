@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models.functions import TruncMonth
 from django.db.models import Count
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from datetime import timedelta, datetime
 from .api import fetch_and_save_promo
 from .models import Promo, PromoEntry
@@ -122,6 +124,7 @@ class FetchPromoView(APIView):
 # ************ xisoblash ***********************
 class PromoCountViewSet(viewsets.ViewSet):
 
+    @method_decorator(cache_page(60*60))  # Cache qilish 1 soatga mo'ljallangan
     def calculate_codes(self, request):
         """
         GET so'rovi: Promo kodlar va telefon raqamlarni hisoblab, ma'lum vaqt oralig'iga ko'ra filterlaydi.
@@ -140,7 +143,7 @@ class PromoCountViewSet(viewsets.ViewSet):
         code_count = filtered_entries.count()
         multiplied_value = code_count * 3149
 
-        # Promo modeli orqali barcha noyob telefon raqamlarini hisoblash
+        # Barcha noyob telefon raqamlarini hisoblash
         total_tel_count = Promo.objects.filter(promos__created_at__gte=start_date).distinct().count()
 
         result = {
