@@ -8,7 +8,7 @@ router.register(r'promo', PromoViewSet, basename='promo')
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('promo-entries/monthly/', MonthlyPromoView.as_view(),),
+    path('promo-entries/monthly/', PromoMonthlyView.as_view(),),
     path('promo-entries/calculate/', PromoCountViewSet.as_view({'get': 'calculate_codes'}),),
     path('fetch-promo/', FetchPromoView.as_view(),),
 ]
