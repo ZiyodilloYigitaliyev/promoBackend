@@ -12,7 +12,7 @@ from .models import Promo, PromoEntry
 from .serializers import PromoSerializer, PromoEntrySerializer
 from django.utils import timezone
 
-class PromoViewSet(viewsets.ViewSet):
+class PromoViewSet(APIView):
 
     def list(self, request):
         """
@@ -65,17 +65,7 @@ class PromoViewSet(viewsets.ViewSet):
         serializer = PromoSerializer(promo)
         return Response(serializer.data)
 
-    def destroy(self, request, pk=None):
-        """
-        DELETE so'rovi: Promo ma'lumotlarini o'chirish.
-        """
-        try:
-            promo = Promo.objects.get(pk=pk)
-        except Promo.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        promo.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 #     ********************* Monthly date *************************
 class PromoMonthlyView(APIView):
     def get(self, request):
@@ -192,7 +182,7 @@ class FetchPromoView(APIView):
             return Response({"detail": "Promo code already exists or failed to fetch promo."}, status=status.HTTP_400_BAD_REQUEST)
 
 # ************ xisoblash ***********************
-class PromoCountViewSet(viewsets.ViewSet):
+class PromoCountViewSet(APIView):
 
     def calculate_codes(self, request):
         """
