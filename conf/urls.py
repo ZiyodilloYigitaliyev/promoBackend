@@ -19,10 +19,11 @@ from django.template.context_processors import static
 from django.urls import path, include
 
 from conf import settings
-from promo import urls
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('adminBaraka/admin', admin.site.urls),
     path('api/', include('promo.urls')),
+    path('api/', include('admin_auth.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
