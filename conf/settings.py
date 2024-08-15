@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # local apps
-    'admin_auth',
+    'auth_admin',
     'promo',
     # installed apps #
     # 'csp',

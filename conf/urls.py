@@ -23,7 +23,7 @@ from conf import settings
 urlpatterns = [
     path('adminBaraka/admin', admin.site.urls),
     path('api/', include('promo.urls')),
-    path('api/', include('admin_auth.urls')),
+    path('api/', include('auth_admin.urls')),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
