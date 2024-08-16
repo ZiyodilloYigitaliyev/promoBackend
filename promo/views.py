@@ -73,6 +73,7 @@ class PromoAPIView(APIView):
 
 #     ********************* Monthly date *************************
 class PromoMonthlyView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         # URL parametrlarini olish
         month = request.query_params.get('month')
@@ -188,7 +189,7 @@ class FetchPromoView(APIView):
 
 # ************ xisoblash ***********************
 class PromoCountViewSet(APIView):
-
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         """
         GET so'rovi: Promo kodlar va telefon raqamlarni hisoblab, ma'lum vaqt oralig'iga ko'ra filterlaydi.
@@ -236,6 +237,26 @@ class PromoCountViewSet(APIView):
             'code_count': code_count,
             'sum': multiplied_value,
             'users': total_tel_count
+        }
+
+        return Response(result, status=status.HTTP_200_OK)
+
+# ************************ WEEK PHONE NUMBERS *******************************
+class RecentPhoneNumbersView(APIView):
+    def get(self, request):
+
+        # Hozirgi vaqt va bir hafta oldingi vaqtni aniqlash
+        now = timezone.now()
+        one_week_ago = now - timedelta(weeks=1)
+
+        # Oxirgi bir haftada yaratilgan promo'larni filtrlash
+        recent_promos = Promo.objects.filter(created_at__gte=one_week_ago).distinct()
+
+        # Telefon raqamlarining ro'yxatini olish
+        phone_numbers = recent_promos.values_list('phone_number', flat=True).distinct()
+
+        result = {
+            'phone_numbers': phone_numbers
         }
 
         return Response(result, status=status.HTTP_200_OK)
