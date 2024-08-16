@@ -188,7 +188,7 @@ class FetchPromoView(APIView):
 # ************ xisoblash ***********************
 class PromoCountViewSet(APIView):
 
-    def calculate_codes(self, request):
+    def get(self, request):
         """
         GET so'rovi: Promo kodlar va telefon raqamlarni hisoblab, ma'lum vaqt oralig'iga ko'ra filterlaydi.
         """
