@@ -243,6 +243,7 @@ class PromoCountViewSet(APIView):
 
 # ************************ WEEK PHONE NUMBERS *******************************
 class WeekPhoneNumbersView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         """
         GET so'rovi: So'nggi hafta ichida yaratilgan promo kodlar bilan birga telefon raqamlarini qaytaradi.
