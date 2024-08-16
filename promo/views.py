@@ -243,6 +243,7 @@ class PromoCountViewSet(APIView):
 
 # ************************ WEEK PHONE NUMBERS *******************************
 class RecentPhoneNumbersView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
 
         # Hozirgi vaqt va bir hafta oldingi vaqtni aniqlash
