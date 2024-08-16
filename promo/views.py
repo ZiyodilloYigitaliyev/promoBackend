@@ -7,24 +7,37 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Count
 import calendar
 from datetime import timedelta, datetime
+
+from rest_framework.viewsets import ViewSet
+
 from .api import fetch_and_save_promo
 from .models import Promo, PromoEntry
 from .serializers import PromoSerializer, PromoEntrySerializer
 from django.utils import timezone
 
-class PromoViewSet(APIView):
 
-    def list(self, request):
-        """
-        GET so'rovi: Barcha promo ma'lumotlarini ro'yxat qilib qaytaradi.
-        """
-        promos = Promo.objects.all()
-        serializer = PromoSerializer(promos, many=True)
-        return Response(serializer.data)
+class PromoAPIView(APIView):
 
-    def create(self, request):
+    def get(self, request, pk=None):
         """
-        POST so'rovi: Promo ma'lumotlarini yaratish va saqlash.
+        GET so'rovi: Barcha promo ma'lumotlarini yoki bitta promo ma'lumotini qaytaradi.
+        """
+        if pk:
+            try:
+                promo = Promo.objects.get(pk=pk)
+            except Promo.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+            serializer = PromoSerializer(promo)
+            return Response(serializer.data)
+        else:
+            promos = Promo.objects.all()
+            serializer = PromoSerializer(promos, many=True)
+            return Response(serializer.data)
+
+    def post(self, request):
+        """
+        POST so'rovi: Yangi promo ma'lumotlarini yaratadi.
         """
         tel = request.data.get('tel')
         promo_code = request.data.get('promo')
@@ -37,22 +50,13 @@ class PromoViewSet(APIView):
         serializer = PromoSerializer(promo_obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def retrieve(self, request, pk=None):
-        """
-        GET so'rovi: Bitta promo ma'lumotini qaytaradi.
-        """
-        try:
-            promo = Promo.objects.get(pk=pk)
-        except Promo.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        serializer = PromoSerializer(promo)
-        return Response(serializer.data)
-
-    def update(self, request, pk=None):
+    def put(self, request, pk=None):
         """
         PUT so'rovi: Promo ma'lumotlarini yangilash.
         """
+        if not pk:
+            return Response({"error": "PK is required for update"}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             promo = Promo.objects.get(pk=pk)
         except Promo.DoesNotExist:
