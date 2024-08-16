@@ -242,27 +242,24 @@ class PromoCountViewSet(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 # ************************ WEEK PHONE NUMBERS *******************************
-class RecentPhoneNumbersView(APIView):
-    def get(self, request):
+class WeekPhoneNumbersView(APIView):
+    def get(self, request, *args, **kwargs):
         """
-        GET so'rovi: Oxirgi bir haftadagi noyob telefon raqamlarini olish.
+        GET so'rovi: So'nggi hafta ichida yaratilgan promo kodlar bilan birga telefon raqamlarini qaytaradi.
         """
-        try:
-            # Hozirgi vaqt va bir hafta oldingi vaqtni aniqlash
-            now = timezone.now()
-            one_week_ago = now - timedelta(weeks=1)
+        # Bugungi sana va so'nggi haftaning boshlanishi
+        today = timezone.now().date()
+        start_of_week = today - timezone.timedelta(days=today.weekday())  # haftaning boshidan bugungi kungacha
+        start_of_week = start_of_week - timezone.timedelta(days=7)  # o‘tgan hafta
 
-            # Oxirgi bir haftada yaratilgan promo'larni filtrlash
-            recent_promos = PromoEntry.objects.filter(created_at__gte=one_week_ago).distinct()
+        # Haftaning oxirgi sanasi
+        end_of_week = start_of_week + timezone.timedelta(days=6)
 
-            # Telefon raqamlarining ro'yxatini olish
-            phone_numbers = recent_promos.values_list('phone_number', flat=True).distinct()
+        # So'nggi hafta uchun promo kodlarni olish
+        entries = PromoEntry.objects.filter(created_at__date__range=[start_of_week, end_of_week])
 
-            result = {
-                'phone_numbers': phone_numbers
-            }
+        # Telefon raqamlarini olish
+        phone_numbers = set(entry.promo.tel for entry in entries)
 
-            return Response(result, status=status.HTTP_200_OK)
-        except Exception as e:
-            # Xatolik yuzaga kelsa, uni logga yozamiz
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Telefon raqamlarining ro'yxatini qaytarish
+        return Response({'phone_numbers': list(phone_numbers)}, status=status.HTTP_200_OK)
