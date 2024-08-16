@@ -243,21 +243,26 @@ class PromoCountViewSet(APIView):
 
 # ************************ WEEK PHONE NUMBERS *******************************
 class RecentPhoneNumbersView(APIView):
-    permission_classes = [IsAuthenticated]
     def get(self, request):
+        """
+        GET so'rovi: Oxirgi bir haftadagi noyob telefon raqamlarini olish.
+        """
+        try:
+            # Hozirgi vaqt va bir hafta oldingi vaqtni aniqlash
+            now = timezone.now()
+            one_week_ago = now - timedelta(weeks=1)
 
-        # Hozirgi vaqt va bir hafta oldingi vaqtni aniqlash
-        now = timezone.now()
-        one_week_ago = now - timedelta(weeks=1)
+            # Oxirgi bir haftada yaratilgan promo'larni filtrlash
+            recent_promos = Promo.objects.filter(created_at__gte=one_week_ago).distinct()
 
-        # Oxirgi bir haftada yaratilgan promo'larni filtrlash
-        recent_promos = Promo.objects.filter(created_at__gte=one_week_ago).distinct()
+            # Telefon raqamlarining ro'yxatini olish
+            phone_numbers = recent_promos.values_list('phone_number', flat=True).distinct()
 
-        # Telefon raqamlarining ro'yxatini olish
-        phone_numbers = recent_promos.values_list('phone_number', flat=True).distinct()
+            result = {
+                'phone_numbers': phone_numbers
+            }
 
-        result = {
-            'phone_numbers': phone_numbers
-        }
-
-        return Response(result, status=status.HTTP_200_OK)
+            return Response(result, status=status.HTTP_200_OK)
+        except Exception as e:
+            # Xatolik yuzaga kelsa, uni logga yozamiz
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
