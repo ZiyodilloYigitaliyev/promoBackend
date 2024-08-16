@@ -253,7 +253,7 @@ class RecentPhoneNumbersView(APIView):
             one_week_ago = now - timedelta(weeks=1)
 
             # Oxirgi bir haftada yaratilgan promo'larni filtrlash
-            recent_promos = Promo.objects.filter(created_at__gte=one_week_ago).distinct()
+            recent_promos = PromoEntry.objects.filter(created_at__gte=one_week_ago).distinct()
 
             # Telefon raqamlarining ro'yxatini olish
             phone_numbers = recent_promos.values_list('phone_number', flat=True).distinct()
