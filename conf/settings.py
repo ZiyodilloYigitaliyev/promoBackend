@@ -87,6 +87,7 @@ X_FRAME_OPTIONS = 'DENY'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://main--barakaadmin.netlify.app",
+    'https://dolphin-app-gpout.ondigitalocean.app',
 
 ]
 CORS_ALLOW_ALL_ORIGINS = True
