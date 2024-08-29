@@ -43,7 +43,17 @@ class PromoAPIView(APIView):
         tel = request.data.get('tel')
         promo_code = request.data.get('promo')
 
+        # Promo obj yaratish yoki olish
         promo_obj, created = Promo.objects.get_or_create(tel=tel)
+
+        # Promo kod oldin yuborilganligini tekshirish
+        if PromoEntry.objects.filter(promo=promo_obj, code=promo_code).exists():
+            return Response(
+                {"detail": "Bu promokod allaqachon yuborilgan."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Promokodni PromoEntry ga saqlash va sent_count ni oshirish
         PromoEntry.objects.create(promo=promo_obj, code=promo_code)
         promo_obj.sent_count += 1
         promo_obj.save()
@@ -177,90 +187,61 @@ class PromoMonthlyView(APIView):
 
         return Response(result, status=status.HTTP_200_OK)
 
-# ********************* Fetch Api *****************************
-class FetchPromoView(APIView):
-    def get(self, request):
-        promo_entry = fetch_and_save_promo()
-        if promo_entry:
-            serializer = PromoEntrySerializer(promo_entry)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response({"detail": "Promo code already exists or failed to fetch promo."}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # ************ xisoblash ***********************
-class PromoCountViewSet(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        """
-        GET so'rovi: Promo kodlar va telefon raqamlarni hisoblab, ma'lum vaqt oralig'iga ko'ra filterlaydi.
-        """
-        # Parametrlarni olish
-        month = request.query_params.get('month')
-        year = request.query_params.get('year')
-
-        if month and year:
-            try:
-                month = int(month)
-                year = int(year)
-                # Oyni va yilni tekshirish
-                if month < 1 or month > 12:
-                    raise ValueError("Month must be between 1 and 12.")
-                if year < 1900:
-                    raise ValueError("Year must be greater than 1900.")
-
-                # O'sha oy va yil uchun boshlanish va tugash vaqtlarini aniqlash
-                start_date = timezone.make_aware(timezone.datetime(year, month, 1))
-                end_date = timezone.make_aware(
-                    timezone.datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59))
-
-                # Filtrlangan promo kodlar
-                filtered_entries = PromoEntry.objects.filter(created_at__range=(start_date, end_date))
-                code_count = filtered_entries.count()
-            except ValueError as e:
-                return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            # Agar month va year parametrlar ko'rsatilmagan bo'lsa, barcha vaqt bo'yicha ma'lumotlar
-            filtered_entries = PromoEntry.objects.all()
-            code_count = filtered_entries.count()
-            start_date = None  # Barcha vaqt
-            end_date = None
-
-        multiplied_value = code_count * 3149
-
-        # Barcha noyob telefon raqamlarini hisoblash
-        if start_date and end_date:
-            total_tel_count = Promo.objects.filter(promos__created_at__range=(start_date, end_date)).distinct().count()
-        else:
-            total_tel_count = Promo.objects.distinct().count()
-
-        result = {
-            'code_count': code_count,
-            'sum': multiplied_value,
-            'users': total_tel_count
-        }
-
-        return Response(result, status=status.HTTP_200_OK)
+# class PromoCountViewSet(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def get(self, request):
+#         """
+#         GET so'rovi: Promo kodlar va telefon raqamlarni hisoblab, ma'lum vaqt oralig'iga ko'ra filterlaydi.
+#         """
+#         # Parametrlarni olish
+#         month = request.query_params.get('month')
+#         year = request.query_params.get('year')
+#
+#         if month and year:
+#             try:
+#                 month = int(month)
+#                 year = int(year)
+#                 # Oyni va yilni tekshirish
+#                 if month < 1 or month > 12:
+#                     raise ValueError("Month must be between 1 and 12.")
+#                 if year < 1900:
+#                     raise ValueError("Year must be greater than 1900.")
+#
+#                 # O'sha oy va yil uchun boshlanish va tugash vaqtlarini aniqlash
+#                 start_date = timezone.make_aware(timezone.datetime(year, month, 1))
+#                 end_date = timezone.make_aware(
+#                     timezone.datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59))
+#
+#                 # Filtrlangan promo kodlar
+#                 filtered_entries = PromoEntry.objects.filter(created_at__range=(start_date, end_date))
+#                 code_count = filtered_entries.count()
+#             except ValueError as e:
+#                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             # Agar month va year parametrlar ko'rsatilmagan bo'lsa, barcha vaqt bo'yicha ma'lumotlar
+#             filtered_entries = PromoEntry.objects.all()
+#             code_count = filtered_entries.count()
+#             start_date = None  # Barcha vaqt
+#             end_date = None
+#
+#         multiplied_value = code_count * 3149
+#
+#         # Barcha noyob telefon raqamlarini hisoblash
+#         if start_date and end_date:
+#             total_tel_count = Promo.objects.filter(promos__created_at__range=(start_date, end_date)).distinct().count()
+#         else:
+#             total_tel_count = Promo.objects.distinct().count()
+#
+#         result = {
+#             'code_count': code_count,
+#             'sum': multiplied_value,
+#             'users': total_tel_count
+#         }
+#
+#         return Response(result, status=status.HTTP_200_OK)
 
 # ************************ WEEK PHONE NUMBERS *******************************
-class WeekPhoneNumbersView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request, *args, **kwargs):
-        """
-        GET so'rovi: So'nggi hafta ichida yaratilgan promo kodlar bilan birga telefon raqamlarini qaytaradi.
-        """
-        # Bugungi sana va so'nggi haftaning boshlanishi
-        today = timezone.now().date()
-        start_of_week = today - timezone.timedelta(days=today.weekday())  # haftaning boshidan bugungi kungacha
-        start_of_week = start_of_week - timezone.timedelta(days=7)  # o‘tgan hafta
 
-        # Haftaning oxirgi sanasi
-        end_of_week = start_of_week + timezone.timedelta(days=6)
-
-        # So'nggi hafta uchun promo kodlarni olish
-        entries = PromoEntry.objects.filter(created_at__date__range=[start_of_week, end_of_week])
-
-        # Telefon raqamlarini olish
-        phone_numbers = set(entry.promo.tel for entry in entries)
-
-        # Telefon raqamlarining ro'yxatini qaytarish
-        return Response({'phone_numbers': list(phone_numbers)}, status=status.HTTP_200_OK)

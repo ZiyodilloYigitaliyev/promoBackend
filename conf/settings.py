@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # DEBUG = True
 DEBUG = False
 
-ALLOWED_HOSTS = ['dolphin-app-gpout.ondigitalocean.app']
+ALLOWED_HOSTS = ['dolphin-app-gpout.ondigitalocean.app', 'localhost']
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'promo',
     # installed apps #
     # 'csp',
+    'fetcher',
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
     'rest_framework',
@@ -68,7 +69,6 @@ REST_FRAMEWORK = {
 
 
 }
-
 
 
 MIDDLEWARE = [

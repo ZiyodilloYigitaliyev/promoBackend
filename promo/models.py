@@ -15,3 +15,6 @@ class PromoEntry(models.Model):
 
     def __str__(self):
         return self.code
+
+# class PromoCode(models.Model):
+#     code = models.CharField(max_length=50)
