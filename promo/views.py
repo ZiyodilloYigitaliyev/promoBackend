@@ -1,7 +1,7 @@
 import requests
 
 from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models.functions import TruncMonth
@@ -229,6 +229,7 @@ class PromoCountViewSet(APIView):
 # ************************ WEEK PHONE NUMBERS *******************************
 
 class PostbackCallbackViews(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         """
         POST so'rovi: Yangi promo ma'lumotlarini yaratadi.
