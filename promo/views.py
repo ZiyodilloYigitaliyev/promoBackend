@@ -61,24 +61,7 @@ class PromoAPIView(APIView):
         serializer = PromoSerializer(promo_obj)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def put(self, request, pk=None):
-        """
-        PUT so'rovi: Promo ma'lumotlarini yangilash.
-        """
-        if not pk:
-            return Response({"error": "PK is required for update"}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            promo = Promo.objects.get(pk=pk)
-        except Promo.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        promo.tel = request.data.get('tel', promo.tel)
-        promo.sent_count = request.data.get('sent_count', promo.sent_count)
-        promo.save()
-
-        serializer = PromoSerializer(promo)
-        return Response(serializer.data)
 
 
 #     ********************* Monthly date *************************
@@ -259,7 +242,7 @@ class PostbackCallbackViews(APIView):
         # Promo kod oldin yuborilganligini tekshirish
         if PromoEntry.objects.filter(promo=promo_obj, code=promo_code).exists():
             return Response(
-                {"detail": "Bu promokod allaqachon yuborilgan."},
+                {"detail": "This promo code has already been sent."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
