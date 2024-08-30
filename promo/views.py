@@ -245,4 +245,28 @@ class PromoCountViewSet(APIView):
 
 # ************************ WEEK PHONE NUMBERS *******************************
 
+class PostbackCallbackViews(APIView):
+    def post(self, request):
+        """
+        POST so'rovi: Yangi promo ma'lumotlarini yaratadi.
+        """
+        tel = request.data.get('tel')
+        promo_code = request.data.get('promo')
 
+        # Promo obj yaratish yoki olish
+        promo_obj, created = Promo.objects.get_or_create(tel=tel)
+
+        # Promo kod oldin yuborilganligini tekshirish
+        if PromoEntry.objects.filter(promo=promo_obj, code=promo_code).exists():
+            return Response(
+                {"detail": "Bu promokod allaqachon yuborilgan."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Promokodni PromoEntry ga saqlash va sent_count ni oshirish
+        PromoEntry.objects.create(promo=promo_obj, code=promo_code)
+        promo_obj.sent_count += 1
+        promo_obj.save()
+
+        serializer = PromoSerializer(promo_obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
