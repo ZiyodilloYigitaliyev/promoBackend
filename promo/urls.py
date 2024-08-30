@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import *
+from PostbackCallbackView import *
 
 
 
@@ -10,6 +11,6 @@ urlpatterns = [
     path('promo/', PromoAPIView.as_view()),
     path('promo-entries/monthly/', PromoMonthlyView.as_view()),
     path('promo-entries/calculate/', PromoCountViewSet.as_view()),
-    # path('fetch-promo/', FetchPromoView.as_view()),
+    path('postback-callback/', PostbackCallbackViews.as_view(), name='postback_callback'),
 
 ]
