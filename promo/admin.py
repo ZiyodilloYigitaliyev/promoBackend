@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Promo, PromoEntry
+from .models import *
+
+admin.site.register(SMSLog)
 
 class PromoEntryInline(admin.TabularInline):
     model = PromoEntry
