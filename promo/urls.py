@@ -6,7 +6,7 @@ from .views import *
 
 
 urlpatterns = [
-    path('promo/', PromoAPIView.as_view()),
+    path('postback-callback/', PromoAPIView.as_view()),
 
     # path('promo-entries/monthly/', PromoMonthlyView.as_view()),
 
