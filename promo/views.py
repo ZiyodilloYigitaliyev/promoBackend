@@ -12,8 +12,8 @@ from datetime import timedelta, datetime
 from rest_framework.viewsets import ViewSet
 
 from .api import fetch_and_save_promo
-from .models import Promo, PromoEntry
-from .serializers import PromoSerializer, PromoEntrySerializer
+from .models import Promo, PromoEntry, SMSLog
+from .serializers import PromoSerializer, PromoEntrySerializer, SMSLogSerializer
 from django.utils import timezone
 
 
@@ -230,27 +230,36 @@ class PromoCountViewSet(APIView):
 
 class PostbackCallbackViews(APIView):
     permission_classes = [AllowAny]
+
+    def get(self, request):
+        """
+        GET so'rovi: Barcha SMS loglarini qaytaradi.
+        """
+        sms_logs = SMSLog.objects.all()
+        serializer = SMSLogSerializer(sms_logs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def post(self, request):
-            # Kiritilgan parametrlardan foydalanish
-            msisdn = request.data.get('msisdn')
-            opi = request.data.get('opi')
-            short_number = request.data.get('short_number')
-            text = request.data.get('text')
+        """
+        POST so'rovi: Kiritilgan ma'lumotlarni qayta ishlaydi va javob beradi.
+        """
+        msisdn = request.data.get('msisdn')
+        opi = request.data.get('opi')
+        short_number = request.data.get('short_number')
+        text = request.data.get('text')
 
-            # Parametrlarga muvofiq xabarni jo'natish
-            sms_response = {
-                "msisdn": msisdn,
-                "opi": opi,
-                "short_number": short_number,
-                "text": "Sizning so'rovingiz qabul qilindi"  # Javob matni
-            }
+        # Yangi SMS log yaratish
+        sms_log = SMSLog.objects.create(
+            msisdn=msisdn,
+            opi=opi,
+            short_number=short_number,
+            text=text
+        )
 
-            # Agar xohlasangiz, bu erda tashqi API ga so'rov yuborishingiz mumkin
-            response = requests.post('https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2',
-                                     json=sms_response)
+        # Ma'lumotni saqlash
+        sms_log.save()
 
-            # Agar so'rov muvaffaqiyatli amalga oshgan bo'lsa
-            if response.status_code == 200:
-                return Response({"detail": "SMS yuborildi va so'rov qabul qilindi"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"detail": "SMS yuborishda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
+        # Javob qaytarish
+        response_message = f"Ваш запрос принят: {text}"
+        return Response({"msisdn": msisdn, "opi": opi, "short_number": short_number, "text": response_message},
+                        status=status.HTTP_200_OK)

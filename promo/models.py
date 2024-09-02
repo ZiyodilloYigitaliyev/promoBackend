@@ -20,7 +20,7 @@ class SMSLog(models.Model):
     msisdn = models.CharField(max_length=15)
     opi = models.CharField(max_length=2)
     short_number = models.CharField(max_length=10)
-    text = models.TextField()
+    message = models.TextField()
     received_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
