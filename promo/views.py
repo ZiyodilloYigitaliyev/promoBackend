@@ -229,24 +229,22 @@ class PromoCountViewSet(APIView):
 
 
 class PostbackCallbackViews(APIView):
-    permission_classes = [AllowAny]
+    # permission_classes = [AllowAny]
+    def get(self, request, *args, **kwargs):
+        """
+        SMSLog ro'yxatini olish.
+        """
+        logs = SMSLog.objects.all()
+        serializer = SMSLogSerializer(logs, many=True)
+        return Response(serializer.data)
 
+    def post(self, request, *args, **kwargs):
+        """
+        Yangi SMSLog qo'shish.
+        """
+        serializer = SMSLogSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-def get(self, request, *args, **kwargs):
-    """
-    SMSLog ro'yxatini olish.
-    """
-    logs = SMSLog.objects.all()
-    serializer = SMSLogSerializer(logs, many=True)
-    return Response(serializer.data)
-
-
-def post(self, request, *args, **kwargs):
-    """
-    Yangi SMSLog qo'shish.
-    """
-    serializer = SMSLogSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
