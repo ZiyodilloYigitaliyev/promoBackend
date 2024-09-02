@@ -229,8 +229,7 @@ class PromoCountViewSet(APIView):
 
 
 class PostbackCallbackViews(APIView):
-    class PostbackCallbackView(APIView):
-        permission_classes = []  # Token tekshiruvi kerak emas
+        permission_classes = [AllowAny]
 
         def post(self, request, *args, **kwargs):
             # So'rovdan kerakli parametrlarni olish
