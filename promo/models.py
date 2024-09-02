@@ -17,7 +17,7 @@ class PromoEntry(models.Model):
         return self.code
 
 class SMSLog(models.Model):
-    msisdn = models.CharField(max_length=20)
+    msisdn = models.CharField(max_length=50)
     opi = models.CharField(max_length=2)
     short_number = models.CharField(max_length=10)
     message = models.TextField()
