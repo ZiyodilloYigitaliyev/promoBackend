@@ -14,44 +14,80 @@ from .serializers import *
 from django.utils import timezone
 
 
-class PromoAPIView(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request, *args, **kwargs):
-            # So'rovdan kerakli parametrlarni olish
-            msisdn = request.data.get('msisdn')
-            opi = request.data.get('opi')
-            short_number = request.data.get('short_number')
-            text = request.data.get('text')
+class PostbackCallbackView(APIView):
 
-            # SMSLog ga yozuv qo'shish
-            sms_log = PromoEntry.objects.create(
-                msisdn=msisdn,
-                opi=opi,
-                short_number=short_number,
-                message=text
-            )
+    def get(self, request, *args, **kwargs):
+        msisdn = request.query_params.get('msisdn')
+        opi = request.query_params.get('opi')
+        short_number = request.query_params.get('short_number')
 
-            # SMS yuborish uchun API'ga so'rov qilish
-            sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
-            sms_api_token = "sUt1TCRZdhKTWXFLdOuy39JByFlx2"  # Tokenni o'zingizda saqlang yoki settings'dan oling
-            sms_data = {
-                'msisdn': msisdn,
-                'opi': opi,
-                'short_number': short_number,
-                'message': text,
-                'token': sms_api_token
+        if not msisdn or not opi or not short_number:
+            return Response({'detail': 'All parameters are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            postback_request = PostbackRequest.objects.get(msisdn=msisdn, opi=opi, short_number=short_number)
+            response = {
+                'msisdn': postback_request.msisdn,
+                'opi': postback_request.opi,
+                'short_number': postback_request.short_number,
+                'text': postback_request.text,
+                'received_at': postback_request.received_at,
             }
 
-            response = requests.post(sms_api_url, data=sms_data)
+            if hasattr(postback_request, 'response'):
+                response.update({
+                    'response_text': postback_request.response.response_text,
+                    'sent_at': postback_request.response.sent_at,
+                    'status_code': postback_request.response.status_code,
+                })
 
-            if response.status_code == 200:
-                # API muvaffaqiyatli javob berdi
-                response_message = "Sizning so'rovingiz qabul qilindi"
-                return Response({'status': 'success', 'message': response_message}, status=status.HTTP_200_OK)
-            else:
-                # API muvaffaqiyatsiz javob berdi
-                return Response({'status': 'error', 'message': 'SMS yuborishda xatolik yuz berdi'},
-                                status=status.HTTP_400_BAD_REQUEST)
+            return Response(response, status=status.HTTP_200_OK)
+
+        except PostbackRequest.DoesNotExist:
+            return Response({'detail': 'Request not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request, *args, **kwargs):
+        msisdn = request.data.get('msisdn')
+        opi = request.data.get('opi')
+        short_number = request.data.get('short_number')
+        text = request.data.get('text')
+
+        if not msisdn or not opi or not short_number or not text:
+            return Response({'detail': 'All parameters are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # So'rovni saqlash
+        postback_request = PostbackRequest.objects.create(
+            msisdn=msisdn,
+            opi=opi,
+            short_number=short_number,
+            text=text
+        )
+
+        # SMS jo'natish uchun API so'rovi
+        sms_data = {
+            'msisdn': msisdn,
+            'opi': opi,
+            'short_number': short_number,
+            'message': 'Ваш запрос принят',
+        }
+        response = requests.post(
+            url='https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2',
+            data=sms_data
+        )
+
+        # Javobni saqlash
+        SMSResponse.objects.create(
+            postback_request=postback_request,
+            response_text=sms_data['message'],
+            sent_at=timezone.now(),
+            status_code=response.status_code
+        )
+
+        if response.status_code == 200:
+            return Response({'detail': 'SMS sent successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Failed to send SMS'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 #     ********************* Monthly date *************************
