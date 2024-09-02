@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import PromoEntry
+from .models import *
 
 # @admin.register(SMSLog)
 # class SMSLogAdmin(admin.ModelAdmin):
@@ -28,4 +28,4 @@ from .models import PromoEntry
 #         return obj.promos.count() * 3149
 #     get_multiplied_value.short_description = 'Multiplied Value'
 
-admin.site.register(PromoEntry)
+admin.site.register([PostbackRequest, SMSResponse])
