@@ -16,4 +16,4 @@ class PromoSerializer(serializers.ModelSerializer):
 class SMSLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = SMSLog
-        fields = ['msisdn', 'opi', 'short_number', 'text', 'received_at']
+        fields = ['msisdn', 'opi', 'short_number', 'message', 'received_at']
