@@ -5,6 +5,10 @@ from .models import *
 class PostbackRequestAdmin(admin.ModelAdmin):
     list_display = ('msisdn', 'opi', 'short_number', 'text')
 
+@admin.register(SMSResponse)
+class SMSResponseAdmin(admin.ModelAdmin):
+    list_display = ('postback_request', 'response_text', 'status_code')
+
 # @admin.register(SMSLog)
 # class SMSLogAdmin(admin.ModelAdmin):
 #     list_display = ['msisdn', 'opi', 'short_number', 'message']

@@ -11,7 +11,7 @@ class PostbackRequestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PostbackRequest
-        fields = ['msisdn', 'opi', 'short_number', 'text', 'received_at', 'response']
+        fields = ['msisdn', 'opi', 'short_number', 'text', 'response']
 
 
 # class PromoEntrySerializer(serializers.ModelSerializer):
