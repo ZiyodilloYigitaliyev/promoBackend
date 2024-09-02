@@ -13,7 +13,7 @@ from rest_framework.viewsets import ViewSet
 
 from .api import fetch_and_save_promo
 from .models import Promo, PromoEntry, SMSLog
-from .serializers import PromoSerializer, PromoEntrySerializer, SMSLogSerializer
+from .serializers import *
 from django.utils import timezone
 
 
@@ -246,20 +246,20 @@ class PostbackCallbackViews(APIView):
         msisdn = request.data.get('msisdn')
         opi = request.data.get('opi')
         short_number = request.data.get('short_number')
-        text = request.data.get('text')
+        message = request.data.get('message')
 
         # Yangi SMS log yaratish
         sms_log = SMSLog.objects.create(
             msisdn=msisdn,
             opi=opi,
             short_number=short_number,
-            text=text
+            message=message
         )
 
         # Ma'lumotni saqlash
         sms_log.save()
 
         # Javob qaytarish
-        response_message = f"Ваш запрос принят: {text}"
+        response_message = f"Ваш запрос принят: {message}"
         return Response({"msisdn": msisdn, "opi": opi, "short_number": short_number, "text": response_message},
                         status=status.HTTP_200_OK)
