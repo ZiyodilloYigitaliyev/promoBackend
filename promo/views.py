@@ -20,32 +20,22 @@ class PostbackCallbackView(APIView):
         msisdn = request.query_params.get('msisdn')
         opi = request.query_params.get('opi')
         short_number = request.query_params.get('short_number')
+        text = request.query_params.get('text')
 
-        if not msisdn or not opi or not short_number:
-            return Response({'detail': 'All parameters are required.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Parametrlarni tekshirish
+        if not all([msisdn, opi, short_number, text]):
+            return Response({"detail": "All parameters are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            postback_request = PostbackRequest.objects.get(msisdn=msisdn, opi=opi, short_number=short_number)
-            response = {
-                'msisdn': postback_request.msisdn,
-                'opi': postback_request.opi,
-                'short_number': postback_request.short_number,
-                'text': postback_request.text,
-                'received_at': postback_request.received_at,
-            }
+        # Javob yaratish
+        response_data = {
+            'msisdn': msisdn,
+            'opi': opi,
+            'short_number': short_number,
+            'text': text
+        }
 
-            if hasattr(postback_request, 'response'):
-                response.update({
-                    'response_text': postback_request.response.response_text,
-                    'sent_at': postback_request.response.sent_at,
-                    'status_code': postback_request.response.status_code,
-                })
-
-            return Response(response, status=status.HTTP_200_OK)
-
-        except PostbackRequest.DoesNotExist:
-            return Response({'detail': 'Request not found.'}, status=status.HTTP_404_NOT_FOUND)
-
+        # Javob qaytarish
+        return Response(response_data, status=status.HTTP_200_OK)
     def post(self, request, *args, **kwargs):
         msisdn = request.data.get('msisdn')
         opi = request.data.get('opi')
