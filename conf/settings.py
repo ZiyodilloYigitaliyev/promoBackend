@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ['walrus-app-gwabt.ondigitalocean.app/', 'localhost']
+ALLOWED_HOSTS = ['walrus-app-gwabt.ondigitalocean.app', 'localhost']
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
 SESSION_COOKIE_SECURE = True
