@@ -1,6 +1,10 @@
 from django.contrib import admin
 from .models import *
 
+@admin.register(PostbackRequest)
+class PostbackRequestAdmin(admin.ModelAdmin):
+    list_display = ('msisdn', 'opi', 'short_number', 'text')
+
 # @admin.register(SMSLog)
 # class SMSLogAdmin(admin.ModelAdmin):
 #     list_display = ['msisdn', 'opi', 'short_number', 'message']
@@ -28,4 +32,3 @@ from .models import *
 #         return obj.promos.count() * 3149
 #     get_multiplied_value.short_description = 'Multiplied Value'
 
-admin.site.register([PostbackRequest, SMSResponse])
