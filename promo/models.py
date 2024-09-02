@@ -17,14 +17,13 @@ class PromoEntry(models.Model):
         return self.code
 
 class SMSLog(models.Model):
-    msisdn = models.CharField(max_length=15)
-    opi = models.CharField(max_length=2)
+    msisdn = models.CharField(max_length=20)
+    opi = models.IntegerField()
     short_number = models.CharField(max_length=10)
     message = models.TextField()
-    received_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"SMS from {self.msisdn} on {self.received_at}"
+        return f'{self.msisdn} - {self.message}'
 
 
 # class PromoCode(models.Model):

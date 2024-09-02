@@ -235,9 +235,12 @@ class PostbackCallbackViews(APIView):
         """
         GET so'rovi: Barcha SMS loglarini qaytaradi.
         """
-        sms_logs = SMSLog.objects.all()
-        serializer = SMSLogSerializer(sms_logs, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            sms_logs = SMSLog.objects.all()
+            serializer = SMSLogSerializer(sms_logs, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request):
         """
@@ -248,18 +251,21 @@ class PostbackCallbackViews(APIView):
         short_number = request.data.get('short_number')
         message = request.data.get('message')
 
-        # Yangi SMS log yaratish
-        sms_log = SMSLog.objects.create(
-            msisdn=msisdn,
-            opi=opi,
-            short_number=short_number,
-            message=message
-        )
+        try:
+            # Yangi SMS log yaratish
+            sms_log = SMSLog.objects.create(
+                msisdn=msisdn,
+                opi=opi,
+                short_number=short_number,
+                message=message
+            )
 
-        # Ma'lumotni saqlash
-        sms_log.save()
+            # Ma'lumotni saqlash
+            sms_log.save()
 
-        # Javob qaytarish
-        response_message = f"Ваш запрос принят: {message}"
-        return Response({"msisdn": msisdn, "opi": opi, "short_number": short_number, "text": response_message},
-                        status=status.HTTP_200_OK)
+            # Javob qaytarish
+            response_message = f"Ваш запрос принят: {message}"
+            return Response({"msisdn": msisdn, "opi": opi, "short_number": short_number, "message": response_message},
+                            status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
