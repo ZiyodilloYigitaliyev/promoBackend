@@ -231,41 +231,22 @@ class PromoCountViewSet(APIView):
 class PostbackCallbackViews(APIView):
     permission_classes = [AllowAny]
 
-    def get(self, request):
-        """
-        GET so'rovi: Barcha SMS loglarini qaytaradi.
-        """
-        try:
-            sms_logs = SMSLog.objects.all()
-            serializer = SMSLogSerializer(sms_logs, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def post(self, request):
-        """
-        POST so'rovi: Kiritilgan ma'lumotlarni qayta ishlaydi va javob beradi.
-        """
-        msisdn = request.data.get('msisdn')
-        opi = request.data.get('opi')
-        short_number = request.data.get('short_number')
-        message = request.data.get('message')
+def get(self, request, *args, **kwargs):
+    """
+    SMSLog ro'yxatini olish.
+    """
+    logs = SMSLog.objects.all()
+    serializer = SMSLogSerializer(logs, many=True)
+    return Response(serializer.data)
 
-        try:
-            # Yangi SMS log yaratish
-            sms_log = SMSLog.objects.create(
-                msisdn=msisdn,
-                opi=opi,
-                short_number=short_number,
-                message=message
-            )
 
-            # Ma'lumotni saqlash
-            sms_log.save()
-
-            # Javob qaytarish
-            response_message = f"Ваш запрос принят: {message}"
-            return Response({"msisdn": msisdn, "opi": opi, "short_number": short_number, "message": response_message},
-                            status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+def post(self, request, *args, **kwargs):
+    """
+    Yangi SMSLog qo'shish.
+    """
+    serializer = SMSLogSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
