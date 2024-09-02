@@ -30,7 +30,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['walrus-app-gwabt.ondigitalocean.app', 'localhost']
 
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'http')
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_SSL_REDIRECT = True
@@ -99,8 +99,7 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://main--barakaadmin.netlify.app",
-    "http://localhost:8000",
-    'https://dolphin-app-gpout.ondigitalocean.app',
+    'https://walrus-app-gwabt.ondigitalocean.app',
 
 ]
 CORS_ALLOW_ALL_ORIGINS = True
