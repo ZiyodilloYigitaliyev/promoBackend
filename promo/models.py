@@ -17,8 +17,7 @@ class PromoEntry(models.Model):
     def __str__(self):
         return f"{self.msisdn} - {self.short_number}"
 
-    def __str__(self):
-        return self.code
+
 
 # class SMSLog(models.Model):
 #     msisdn = models.CharField(max_length=50)
