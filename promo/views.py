@@ -234,21 +234,21 @@ class PostbackCallbackViews(APIView):
         """
         POST so'rovi: Yangi promo ma'lumotlarini yaratadi.
         """
-        tel = request.data.get('tel')
-        promo_code = request.data.get('promo')
+        msisdn = request.data.get('msisdn')
+        text = request.data.get('text')
 
         # Promo obj yaratish yoki olish
-        promo_obj, created = Promo.objects.get_or_create(tel=tel)
+        promo_obj, created = Promo.objects.get_or_create(tel=msisdn)
 
         # Promo kod oldin yuborilganligini tekshirish
-        if PromoEntry.objects.filter(promo=promo_obj, code=promo_code).exists():
+        if PromoEntry.objects.filter(promo=promo_obj, code=text).exists():
             return Response(
                 {"detail": "This promo code has already been sent."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         # Promokodni PromoEntry ga saqlash va sent_count ni oshirish
-        PromoEntry.objects.create(promo=promo_obj, code=promo_code)
+        PromoEntry.objects.create(promo=promo_obj, code=text)
         promo_obj.sent_count += 1
         promo_obj.save()
 
