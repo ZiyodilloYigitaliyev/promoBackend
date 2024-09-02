@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Promo, PromoEntry
+from .models import *
 
 class PromoEntrySerializer(serializers.ModelSerializer):
     class Meta:
@@ -12,3 +12,8 @@ class PromoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promo
         fields = ['id', 'tel', 'sent_count', 'promos']
+
+class SMSLogSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SMSLog
+        fields = ['msisdn', 'opi', 'short_number', 'text', 'received_at']

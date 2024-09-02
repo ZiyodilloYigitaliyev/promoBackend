@@ -16,5 +16,16 @@ class PromoEntry(models.Model):
     def __str__(self):
         return self.code
 
+class SMSLog(models.Model):
+    msisdn = models.CharField(max_length=15)
+    opi = models.CharField(max_length=2)
+    short_number = models.CharField(max_length=10)
+    text = models.TextField()
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"SMS from {self.msisdn} on {self.received_at}"
+
+
 # class PromoCode(models.Model):
 #     code = models.CharField(max_length=50)

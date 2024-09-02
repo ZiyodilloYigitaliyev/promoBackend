@@ -230,27 +230,29 @@ class PromoCountViewSet(APIView):
 
 class PostbackCallbackViews(APIView):
     permission_classes = [AllowAny]
-    def post(self, request):
-        """
-        POST so'rovi: Yangi promo ma'lumotlarini yaratadi.
-        """
-        msisdn = request.data.get('msisdn')
-        text = request.data.get('text')
 
-        # Promo obj yaratish yoki olish
-        promo_obj, created = Promo.objects.get_or_create(tel=msisdn)
+    class PostbackCallbackView(APIView):
+        def post(self, request):
+            # Kiritilgan parametrlardan foydalanish
+            msisdn = request.data.get('msisdn')
+            opi = request.data.get('opi')
+            short_number = request.data.get('short_number')
+            text = request.data.get('text')
 
-        # Promo kod oldin yuborilganligini tekshirish
-        if PromoEntry.objects.filter(promo=promo_obj, code=text).exists():
-            return Response(
-                {"detail": "This promo code has already been sent."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            # Parametrlarga muvofiq xabarni jo'natish
+            sms_response = {
+                "msisdn": msisdn,
+                "opi": opi,
+                "short_number": short_number,
+                "text": "Sizning so'rovingiz qabul qilindi"  # Javob matni
+            }
 
-        # Promokodni PromoEntry ga saqlash va sent_count ni oshirish
-        PromoEntry.objects.create(promo=promo_obj, code=text)
-        promo_obj.sent_count += 1
-        promo_obj.save()
+            # Agar xohlasangiz, bu erda tashqi API ga so'rov yuborishingiz mumkin
+            response = requests.post('https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2',
+                                     json=sms_response)
 
-        serializer = PromoSerializer(promo_obj)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # Agar so'rov muvaffaqiyatli amalga oshgan bo'lsa
+            if response.status_code == 200:
+                return Response({"detail": "SMS yuborildi va so'rov qabul qilindi"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "SMS yuborishda xatolik"}, status=status.HTTP_400_BAD_REQUEST)
