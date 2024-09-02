@@ -226,11 +226,10 @@ class PromoCountViewSet(APIView):
 
         return Response(result, status=status.HTTP_200_OK)
 
-# ************************ WEEK PHONE NUMBERS *******************************
+
 
 class PostbackCallbackViews(APIView):
-    permission_classes = [AllowAny]
-
+    # permission_classes = [AllowAny]
     class PostbackCallbackView(APIView):
         def post(self, request):
             # Kiritilgan parametrlardan foydalanish
