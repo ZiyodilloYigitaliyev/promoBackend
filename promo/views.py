@@ -229,22 +229,43 @@ class PromoCountViewSet(APIView):
 
 
 class PostbackCallbackViews(APIView):
-    # permission_classes = [AllowAny]
-    def get(self, request, *args, **kwargs):
-        """
-        SMSLog ro'yxatini olish.
-        """
-        logs = SMSLog.objects.all()
-        serializer = SMSLogSerializer(logs, many=True)
-        return Response(serializer.data)
+    class PostbackCallbackView(APIView):
+        permission_classes = []  # Token tekshiruvi kerak emas
 
-    def post(self, request, *args, **kwargs):
-        """
-        Yangi SMSLog qo'shish.
-        """
-        serializer = SMSLogSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        def post(self, request, *args, **kwargs):
+            # So'rovdan kerakli parametrlarni olish
+            msisdn = request.data.get('msisdn')
+            opi = request.data.get('opi')
+            short_number = request.data.get('short_number')
+            text = request.data.get('text')
+
+            # SMSLog ga yozuv qo'shish
+            sms_log = SMSLog.objects.create(
+                msisdn=msisdn,
+                opi=opi,
+                short_number=short_number,
+                message=text
+            )
+
+            # SMS yuborish uchun API'ga so'rov qilish
+            sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
+            sms_api_token = "sUt1TCRZdhKTWXFLdOuy39JByFlx2"  # Tokenni o'zingizda saqlang yoki settings'dan oling
+            sms_data = {
+                'msisdn': msisdn,
+                'opi': opi,
+                'short_number': short_number,
+                'message': text,
+                'token': sms_api_token
+            }
+
+            response = requests.post(sms_api_url, data=sms_data)
+
+            if response.status_code == 200:
+                # API muvaffaqiyatli javob berdi
+                response_message = "Sizning so'rovingiz qabul qilindi"
+                return Response({'status': 'success', 'message': response_message}, status=status.HTTP_200_OK)
+            else:
+                # API muvaffaqiyatsiz javob berdi
+                return Response({'status': 'error', 'message': 'SMS yuborishda xatolik yuz berdi'},
+                                status=status.HTTP_400_BAD_REQUEST)
 

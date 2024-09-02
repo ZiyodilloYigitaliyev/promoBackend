@@ -23,7 +23,7 @@ class SMSLog(models.Model):
     message = models.TextField()
 
     def __str__(self):
-        return f'{self.msisdn} - {self.message}'
+        return f"{self.msisdn} - {self.short_number}"
 
 
 # class PromoCode(models.Model):
