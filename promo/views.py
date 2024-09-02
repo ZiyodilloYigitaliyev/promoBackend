@@ -8,11 +8,8 @@ from django.db.models.functions import TruncMonth
 from django.db.models import Count
 import calendar
 from datetime import timedelta, datetime
-
 from rest_framework.viewsets import ViewSet
 
-from .api import fetch_and_save_promo
-from .models import  PromoEntry
 from .serializers import *
 from django.utils import timezone
 

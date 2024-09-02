@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import *
+from .models import PromoEntry
 
 # @admin.register(SMSLog)
 # class SMSLogAdmin(admin.ModelAdmin):
