@@ -1,7 +1,9 @@
 from django.contrib import admin
 from .models import *
 
-admin.site.register(SMSLog)
+@admin.register(SMSLog)
+class SMSLogAdmin(admin.ModelAdmin):
+    list_display = ['msisdn', 'opi', 'short_number', 'message']
 
 class PromoEntryInline(admin.TabularInline):
     model = PromoEntry
