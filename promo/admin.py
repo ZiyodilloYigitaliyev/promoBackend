@@ -1,9 +1,9 @@
 from django.contrib import admin
 from .models import *
 
-@admin.register(SMSLog)
-class SMSLogAdmin(admin.ModelAdmin):
-    list_display = ['msisdn', 'opi', 'short_number', 'message']
+# @admin.register(SMSLog)
+# class SMSLogAdmin(admin.ModelAdmin):
+#     list_display = ['msisdn', 'opi', 'short_number', 'message']
 
 class PromoEntryInline(admin.TabularInline):
     model = PromoEntry
@@ -28,9 +28,4 @@ class PromoAdmin(admin.ModelAdmin):
         return obj.promos.count() * 3149
     get_multiplied_value.short_description = 'Multiplied Value'
 
-@admin.register(PromoEntry)
-class PromoEntryAdmin(admin.ModelAdmin):
-    list_display = ('promo', 'code', 'created_at')
-    search_fields = ('code', 'promo__tel')
-    list_filter = ('created_at',)
-    ordering = ('-created_at',)
+admin.site.register(PromoEntry)

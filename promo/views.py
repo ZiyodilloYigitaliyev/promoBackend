@@ -12,56 +12,49 @@ from datetime import timedelta, datetime
 from rest_framework.viewsets import ViewSet
 
 from .api import fetch_and_save_promo
-from .models import Promo, PromoEntry, SMSLog
+from .models import Promo, PromoEntry
 from .serializers import *
 from django.utils import timezone
 
 
 class PromoAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-    def get(self, request, pk=None):
-        """
-        GET so'rovi: Barcha promo ma'lumotlarini yoki bitta promo ma'lumotini qaytaradi.
-        """
-        if pk:
-            try:
-                promo = Promo.objects.get(pk=pk)
-            except Promo.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+    permission_classes = [AllowAny]
+    def post(self, request, *args, **kwargs):
+            # So'rovdan kerakli parametrlarni olish
+            msisdn = request.data.get('msisdn')
+            opi = request.data.get('opi')
+            short_number = request.data.get('short_number')
+            text = request.data.get('text')
 
-            serializer = PromoSerializer(promo)
-            return Response(serializer.data)
-        else:
-            promos = Promo.objects.all()
-            serializer = PromoSerializer(promos, many=True)
-            return Response(serializer.data)
-
-    def post(self, request):
-        """
-        POST so'rovi: Yangi promo ma'lumotlarini yaratadi.
-        """
-        tel = request.data.get('tel')
-        promo_code = request.data.get('promo')
-
-        # Promo obj yaratish yoki olish
-        promo_obj, created = Promo.objects.get_or_create(tel=tel)
-
-        # Promo kod oldin yuborilganligini tekshirish
-        if PromoEntry.objects.filter(promo=promo_obj, code=promo_code).exists():
-            return Response(
-                {"detail": "Bu promokod allaqachon yuborilgan."},
-                status=status.HTTP_400_BAD_REQUEST
+            # SMSLog ga yozuv qo'shish
+            sms_log = PromoEntry.objects.create(
+                msisdn=msisdn,
+                opi=opi,
+                short_number=short_number,
+                message=text
             )
 
-        # Promokodni PromoEntry ga saqlash va sent_count ni oshirish
-        PromoEntry.objects.create(promo=promo_obj, code=promo_code)
-        promo_obj.sent_count += 1
-        promo_obj.save()
+            # SMS yuborish uchun API'ga so'rov qilish
+            sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
+            sms_api_token = "sUt1TCRZdhKTWXFLdOuy39JByFlx2"  # Tokenni o'zingizda saqlang yoki settings'dan oling
+            sms_data = {
+                'msisdn': msisdn,
+                'opi': opi,
+                'short_number': short_number,
+                'message': text,
+                'token': sms_api_token
+            }
 
-        serializer = PromoSerializer(promo_obj)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            response = requests.post(sms_api_url, data=sms_data)
 
-
+            if response.status_code == 200:
+                # API muvaffaqiyatli javob berdi
+                response_message = "Sizning so'rovingiz qabul qilindi"
+                return Response({'status': 'success', 'message': response_message}, status=status.HTTP_200_OK)
+            else:
+                # API muvaffaqiyatsiz javob berdi
+                return Response({'status': 'error', 'message': 'SMS yuborishda xatolik yuz berdi'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
 
 #     ********************* Monthly date *************************
@@ -227,44 +220,44 @@ class PromoCountViewSet(APIView):
         return Response(result, status=status.HTTP_200_OK)
 
 
-
-class PostbackCallbackViews(APIView):
-        permission_classes = [AllowAny]
-
-        def post(self, request, *args, **kwargs):
-            # So'rovdan kerakli parametrlarni olish
-            msisdn = request.data.get('msisdn')
-            opi = request.data.get('opi')
-            short_number = request.data.get('short_number')
-            text = request.data.get('text')
-
-            # SMSLog ga yozuv qo'shish
-            sms_log = SMSLog.objects.create(
-                msisdn=msisdn,
-                opi=opi,
-                short_number=short_number,
-                message=text
-            )
-
-            # SMS yuborish uchun API'ga so'rov qilish
-            sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
-            sms_api_token = "sUt1TCRZdhKTWXFLdOuy39JByFlx2"  # Tokenni o'zingizda saqlang yoki settings'dan oling
-            sms_data = {
-                'msisdn': msisdn,
-                'opi': opi,
-                'short_number': short_number,
-                'message': text,
-                'token': sms_api_token
-            }
-
-            response = requests.post(sms_api_url, data=sms_data)
-
-            if response.status_code == 200:
-                # API muvaffaqiyatli javob berdi
-                response_message = "Sizning so'rovingiz qabul qilindi"
-                return Response({'status': 'success', 'message': response_message}, status=status.HTTP_200_OK)
-            else:
-                # API muvaffaqiyatsiz javob berdi
-                return Response({'status': 'error', 'message': 'SMS yuborishda xatolik yuz berdi'},
-                                status=status.HTTP_400_BAD_REQUEST)
+#
+# class PostbackCallbackViews(APIView):
+#         permission_classes = [AllowAny]
+#
+#         def post(self, request, *args, **kwargs):
+#             # So'rovdan kerakli parametrlarni olish
+#             msisdn = request.data.get('msisdn')
+#             opi = request.data.get('opi')
+#             short_number = request.data.get('short_number')
+#             text = request.data.get('text')
+#
+#             # SMSLog ga yozuv qo'shish
+#             sms_log = SMSLog.objects.create(
+#                 msisdn=msisdn,
+#                 opi=opi,
+#                 short_number=short_number,
+#                 message=text
+#             )
+#
+#             # SMS yuborish uchun API'ga so'rov qilish
+#             sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
+#             sms_api_token = "sUt1TCRZdhKTWXFLdOuy39JByFlx2"  # Tokenni o'zingizda saqlang yoki settings'dan oling
+#             sms_data = {
+#                 'msisdn': msisdn,
+#                 'opi': opi,
+#                 'short_number': short_number,
+#                 'message': text,
+#                 'token': sms_api_token
+#             }
+#
+#             response = requests.post(sms_api_url, data=sms_data)
+#
+#             if response.status_code == 200:
+#                 # API muvaffaqiyatli javob berdi
+#                 response_message = "Sizning so'rovingiz qabul qilindi"
+#                 return Response({'status': 'success', 'message': response_message}, status=status.HTTP_200_OK)
+#             else:
+#                 # API muvaffaqiyatsiz javob berdi
+#                 return Response({'status': 'error', 'message': 'SMS yuborishda xatolik yuz berdi'},
+#                                 status=status.HTTP_400_BAD_REQUEST)
 
