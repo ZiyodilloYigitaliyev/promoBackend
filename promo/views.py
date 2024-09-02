@@ -229,9 +229,8 @@ class PromoCountViewSet(APIView):
 
 
 class PostbackCallbackViews(APIView):
-    # permission_classes = [AllowAny]
-    class PostbackCallbackView(APIView):
-        def post(self, request):
+    permission_classes = [AllowAny]
+    def post(self, request):
             # Kiritilgan parametrlardan foydalanish
             msisdn = request.data.get('msisdn')
             opi = request.data.get('opi')
