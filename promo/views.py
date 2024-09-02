@@ -15,6 +15,7 @@ from django.utils import timezone
 
 
 class PostbackCallbackView(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
         msisdn = request.data.get('msisdn')
         opi = request.data.get('opi')
