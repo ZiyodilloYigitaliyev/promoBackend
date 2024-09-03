@@ -34,7 +34,7 @@ class PostbackCallbackView(APIView):
                 "short_number": postback_request.short_number,
                 "text": postback_request.text  # matn o'rnida `text`dan foydalanamiz
             }
-            response = requests.get(
+            response = requests.post(
                 "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2",
                 data=sms_data
             )
