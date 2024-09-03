@@ -16,10 +16,10 @@ from django.utils import timezone
 
 class PostbackCallbackView(APIView):
     permission_classes = [AllowAny]
-    def get(self, request):
-        postback_requests = PostbackRequest.objects.all()
-        serializer = PostbackRequestSerializer(postback_requests, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    # def get(self, request):
+    #     postback_requests = PostbackRequest.objects.all()
+    #     serializer = PostbackRequestSerializer(postback_requests, many=True)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         opi = request.query_params.get('opi')
