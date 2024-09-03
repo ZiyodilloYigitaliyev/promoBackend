@@ -14,7 +14,7 @@ from .serializers import *
 from django.utils import timezone
 
 
-class PostbackRequestAPIView(APIView):
+class PostbackCallbackView(APIView):
 
     def get(self, request):
         postback_requests = PostbackRequest.objects.all()
