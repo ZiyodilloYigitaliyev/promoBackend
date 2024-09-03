@@ -21,34 +21,26 @@ class PostbackCallbackView(APIView):
         serializer = PostbackRequestSerializer(postback_requests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def post(self, request):
-        # Получение данных из запроса
-        msisdn = request.data.get('msisdn')
-        opi = request.data.get('opi')
-        short_number = request.data.get('short_number')
-        message = request.data.get('message')
+    def post(self, request, *args, **kwargs):
+        opi = request.query_params.get('opi')
+        msisdn = request.query_params.get('msisdn')
+        short_number = request.query_params.get('short_number')
+        message = request.query_params.get('message')
 
-        # Валидация данных
-        if not msisdn or not opi or not short_number or not message:
-            return Response({"error": "Все поля должны быть заполнены."}, status=status.HTTP_400_BAD_REQUEST)
+        # Tekshiruv va xatoliklarni qayta ishlash
+        if not all([opi, msisdn, short_number, message]):
+            return Response({'error': 'Все поля должны быть заполнены.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            # Сохранение данных в базу
-            postback_request = PostbackRequest.objects.create(
-                msisdn=msisdn,
-                opi=opi,
-                short_number=short_number,
-                text=message
-            )
-            # Сохранение созданной модели
-            postback_request.save()
+        # Modelga saqlash
+        PostbackRequest.objects.create(
+            opi=opi,
+            msisdn=msisdn,
+            short_number=short_number,
+            text=message
+        )
 
-            # Возврат успешного ответа
-            return Response({"message": "Данные успешно приняты."}, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            # Возврат ошибки в случае неудачи
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Response ni qaytarish
+        return Response({'message': 'OK'}, status=status.HTTP_200_OK)
 
 #     ********************* Monthly date *************************
 # class PromoMonthlyView(APIView):
