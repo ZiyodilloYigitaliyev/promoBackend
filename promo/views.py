@@ -38,7 +38,7 @@ class PostbackCallbackView(APIView):
                 msisdn=msisdn,
                 opi=opi,
                 short_number=short_number,
-                text=text
+                text=message
             )
             # Сохранение созданной модели
             postback_request.save()
