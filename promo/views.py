@@ -22,29 +22,33 @@ class PostbackCallbackView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = PostbackRequestSerializer(data=request.data)
-        if serializer.is_valid():
-            # Ma'lumotlarni saqlaymiz
-            postback_request = serializer.save()
+        # Получение данных из запроса
+        msisdn = request.data.get('msisdn')
+        opi = request.data.get('opi')
+        short_number = request.data.get('short_number')
+        text = request.data.get('text')
 
-            # SMS jo'natish uchun API ga so'rov yuboramiz
-            sms_data = {
-                "msisdn": postback_request.msisdn,
-                "opi": postback_request.opi,
-                "short_number": postback_request.short_number,
-                "text": postback_request.text  # matn o'rnida `text`dan foydalanamiz
-            }
-            response = requests.post(
-                "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2",
-                data=sms_data
+        # Валидация данных
+        if not msisdn or not opi or not short_number or not text:
+            return Response({"error": "Все поля должны быть заполнены."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Сохранение данных в базу
+            postback_request = PostbackRequest.objects.create(
+                msisdn=msisdn,
+                opi=opi,
+                short_number=short_number,
+                text=text
             )
+            # Сохранение созданной модели
+            postback_request.save()
 
-            if response.status_code == 200:
-                return Response({"text": "OK"}, status=status.HTTP_200_OK)
-            else:
-                return Response({"error": "Failed to send SMS"}, status=response.status_code)
+            # Возврат успешного ответа
+            return Response({"message": "Данные успешно приняты."}, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            # Возврат ошибки в случае неудачи
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 #     ********************* Monthly date *************************
 # class PromoMonthlyView(APIView):
