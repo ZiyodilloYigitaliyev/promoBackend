@@ -4,14 +4,14 @@ from .models import *
 class SMSResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = SMSResponse
-        fields = ['response_text', 'sent_at', 'status_code']
+        fields = '__all__'
 
 class PostbackRequestSerializer(serializers.ModelSerializer):
     response = SMSResponseSerializer(read_only=True)
 
     class Meta:
         model = PostbackRequest
-        fields = ['msisdn', 'opi', 'short_number', 'text', 'response']
+        fields = '__all__'
 
 
 # class PromoEntrySerializer(serializers.ModelSerializer):

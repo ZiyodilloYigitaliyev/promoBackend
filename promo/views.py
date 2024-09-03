@@ -14,42 +14,37 @@ from .serializers import *
 from django.utils import timezone
 
 
-class PostbackCallbackView(APIView):
-    permission_classes = [AllowAny]
-    def post(self, request):
-        msisdn = request.data.get('msisdn')
-        opi = request.data.get('opi')
-        short_number = request.data.get('short_number')
-        text = request.data.get('text')
-
-        # Ma'lumotlarni saqlash uchun modeldan foydalanish
-        PostbackRequest.objects.create(
-            msisdn=msisdn,
-            opi=opi,
-            short_number=short_number,
-            text=text
-        )
-
-        # SMS ni jo'natish
-        response = requests.post(
-            'https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2',
-            data={
-                'msisdn': msisdn,
-                'opi': opi,
-                'short_number': short_number,
-                'message': 'Sizning so`rovingiz qabul qilindi'
-            }
-        )
-
-        if response.status_code == 200:
-            return Response({'message': 'SMS yuborildi'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'message': 'SMS jo\'natishda xatolik yuz berdi'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+class PostbackRequestAPIView(APIView):
 
     def get(self, request):
-        callbacks = PostbackRequest.objects.all()
-        serializer = PostbackRequestSerializer(callbacks, many=True)
-        return Response(serializer.data)
+        postback_requests = PostbackRequest.objects.all()
+        serializer = PostbackRequestSerializer(postback_requests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = PostbackRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            # Ma'lumotlarni saqlaymiz
+            postback_request = serializer.save()
+
+            # SMS jo'natish uchun API ga so'rov yuboramiz
+            sms_data = {
+                "msisdn": postback_request.msisdn,
+                "opi": postback_request.opi,
+                "short_number": postback_request.short_number,
+                "text": postback_request.text  # matn o'rnida `text`dan foydalanamiz
+            }
+            response = requests.get(
+                "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2",
+                data=sms_data
+            )
+
+            if response.status_code == 200:
+                return Response({"message": "OK"}, status=status.HTTP_200_OK)
+            else:
+                return Response({"error": "Failed to send SMS"}, status=response.status_code)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 #     ********************* Monthly date *************************
 # class PromoMonthlyView(APIView):
