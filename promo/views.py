@@ -43,9 +43,9 @@ class PostbackCallbackView(APIView):
                 sms_api_url = "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2"
                 params = {
                     'opi': opi,
-                    'msisdn': msisdn,  # Yuborilgan raqam formati to'g'ri ekanligiga ishonch hosil qiling
-                    'short_number': short_number,  # Qisqa raqam to'g'ri formatda
-                    'message': custom_message  # Xabar matnida maxsus belgilar yo'qligini tekshiring
+                    'msisdn': msisdn,
+                    'short_number': short_number,
+                    'message': custom_message
                 }
 
                 try:
@@ -169,100 +169,4 @@ class PostbackCallbackView(APIView):
 #         return Response(result, status=status.HTTP_200_OK)
 
 
-
-# ************ xisoblash ***********************
-# class PromoCountViewSet(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def get(self, request):
-#         """
-#         GET so'rovi: Promo kodlar va telefon raqamlarni hisoblab, ma'lum vaqt oralig'iga ko'ra filterlaydi.
-#         """
-#         # Parametrlarni olish
-#         month = request.query_params.get('month')
-#         year = request.query_params.get('year')
-#
-#         if month and year:
-#             try:
-#                 month = int(month)
-#                 year = int(year)
-#                 # Oyni va yilni tekshirish
-#                 if month < 1 or month > 12:
-#                     raise ValueError("Month must be between 1 and 12.")
-#                 if year < 1900:
-#                     raise ValueError("Year must be greater than 1900.")
-#
-#                 # O'sha oy va yil uchun boshlanish va tugash vaqtlarini aniqlash
-#                 start_date = timezone.make_aware(timezone.datetime(year, month, 1))
-#                 end_date = timezone.make_aware(
-#                     timezone.datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59))
-#
-#                 # Filtrlangan promo kodlar
-#                 filtered_entries = PromoEntry.objects.filter(created_at__range=(start_date, end_date))
-#                 code_count = filtered_entries.count()
-#             except ValueError as e:
-#                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-#         else:
-#             # Agar month va year parametrlar ko'rsatilmagan bo'lsa, barcha vaqt bo'yicha ma'lumotlar
-#             filtered_entries = PromoEntry.objects.all()
-#             code_count = filtered_entries.count()
-#             start_date = None  # Barcha vaqt
-#             end_date = None
-#
-#         multiplied_value = code_count * 3149
-#
-#         # Barcha noyob telefon raqamlarini hisoblash
-#         if start_date and end_date:
-#             total_tel_count = Promo.objects.filter(promos__created_at__range=(start_date, end_date)).distinct().count()
-#         else:
-#             total_tel_count = Promo.objects.distinct().count()
-#
-#         result = {
-#             'code_count': code_count,
-#             'sum': multiplied_value,
-#             'users': total_tel_count
-#         }
-#
-#         return Response(result, status=status.HTTP_200_OK)
-
-
-#
-# class PostbackCallbackViews(APIView):
-#         permission_classes = [AllowAny]
-#
-#         def post(self, request, *args, **kwargs):
-#             # So'rovdan kerakli parametrlarni olish
-#             msisdn = request.data.get('msisdn')
-#             opi = request.data.get('opi')
-#             short_number = request.data.get('short_number')
-#             text = request.data.get('text')
-#
-#             # SMSLog ga yozuv qo'shish
-#             sms_log = SMSLog.objects.create(
-#                 msisdn=msisdn,
-#                 opi=opi,
-#                 short_number=short_number,
-#                 message=text
-#             )
-#
-#             # SMS yuborish uchun API'ga so'rov qilish
-#             sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
-#             sms_api_token = "sUt1TCRZdhKTWXFLdOuy39JByFlx2"  # Tokenni o'zingizda saqlang yoki settings'dan oling
-#             sms_data = {
-#                 'msisdn': msisdn,
-#                 'opi': opi,
-#                 'short_number': short_number,
-#                 'message': text,
-#                 'token': sms_api_token
-#             }
-#
-#             response = requests.post(sms_api_url, data=sms_data)
-#
-#             if response.status_code == 200:
-#                 # API muvaffaqiyatli javob berdi
-#                 response_message = "Sizning so'rovingiz qabul qilindi"
-#                 return Response({'status': 'success', 'message': response_message}, status=status.HTTP_200_OK)
-#             else:
-#                 # API muvaffaqiyatsiz javob berdi
-#                 return Response({'status': 'error', 'message': 'SMS yuborishda xatolik yuz berdi'},
-#                                 status=status.HTTP_400_BAD_REQUEST)
 
