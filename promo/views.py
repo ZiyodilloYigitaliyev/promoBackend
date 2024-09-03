@@ -35,14 +35,17 @@ class PostbackCallbackView(APIView):
 
             if serializer.is_valid():
                 serializer.save()
-
+                custom_message = (
+                    "Promo kodingizni qabul qilindi!\n"
+                    "“Boriga baraka” shousida ishtirok etganingiz uchun tashakkur"
+                )
                 # GET so'rovini API ga yuborish
                 sms_api_url = "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2"
                 params = {
                     'opi': opi,
                     'msisdn': msisdn,  # Yuborilgan raqam formati to'g'ri ekanligiga ishonch hosil qiling
                     'short_number': short_number,  # Qisqa raqam to'g'ri formatda
-                    'message': text  # Xabar matnida maxsus belgilar yo'qligini tekshiring
+                    'message': custom_message  # Xabar matnida maxsus belgilar yo'qligini tekshiring
                 }
 
                 try:
@@ -54,6 +57,10 @@ class PostbackCallbackView(APIView):
                     return Response({"error": "Failed to send SMS", "details": str(e)},
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
 
 #     ********************* Monthly date *************************
 # class PromoMonthlyView(APIView):
