@@ -15,7 +15,7 @@ from django.utils import timezone
 
 
 class PostbackCallbackView(APIView):
-
+    permission_classes = [AllowAny]
     def get(self, request):
         postback_requests = PostbackRequest.objects.all()
         serializer = PostbackRequestSerializer(postback_requests, many=True)
