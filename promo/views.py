@@ -37,9 +37,9 @@ class PostbackCallbackView(APIView):
                 serializer.save()
 
                 # GET so'rovini API ga yuborish
-                sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
+                sms_api_url = "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2"
                 params = {
-                    'token': 'sUt1TCRZdhKTWXFLdOuy39JByFlx2',
+                    'opi': opi,
                     'msisdn': msisdn,  # Yuborilgan raqam formati to'g'ri ekanligiga ishonch hosil qiling
                     'short_number': short_number,  # Qisqa raqam to'g'ri formatda
                     'message': text  # Xabar matnida maxsus belgilar yo'qligini tekshiring
