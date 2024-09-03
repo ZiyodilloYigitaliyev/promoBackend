@@ -40,25 +40,20 @@ class PostbackCallbackView(APIView):
                 sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
                 params = {
                     'token': 'sUt1TCRZdhKTWXFLdOuy39JByFlx2',
-                    'msisdn': msisdn,
-                    'short_number': short_number,
-                    'message': text  # Yuboriladigan xabar
+                    'msisdn': msisdn,  # Yuborilgan raqam formati to'g'ri ekanligiga ishonch hosil qiling
+                    'short_number': short_number,  # Qisqa raqam to'g'ri formatda
+                    'message': text  # Xabar matnida maxsus belgilar yo'qligini tekshiring
                 }
 
                 try:
                     sms_response = requests.get(sms_api_url, params=params)
                     sms_response.raise_for_status()
-
-                    # Agar SMS yuborish muvaffaqiyatli bo'lsa
+                    # Agar muvaffaqiyatli bo'lsa
                     return Response({'message': 'Data saved and SMS sent successfully'}, status=status.HTTP_201_CREATED)
                 except requests.RequestException as e:
-                    # Agar SMS yuborishda xatolik yuz bersa
                     return Response({"error": "Failed to send SMS", "details": str(e)},
                                     status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 #     ********************* Monthly date *************************
 # class PromoMonthlyView(APIView):
