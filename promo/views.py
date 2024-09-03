@@ -40,7 +40,7 @@ class PostbackCallbackView(APIView):
             )
 
             if response.status_code == 200:
-                return Response({"message": "OK"}, status=status.HTTP_200_OK)
+                return Response({"text": "OK"}, status=status.HTTP_200_OK)
             else:
                 return Response({"error": "Failed to send SMS"}, status=response.status_code)
 
