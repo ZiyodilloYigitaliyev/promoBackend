@@ -29,7 +29,7 @@ class PostbackCallbackView(APIView):
         message = request.data.get('text')
 
         # Валидация данных
-        if not msisdn or not opi or not short_number or not text:
+        if not msisdn or not opi or not short_number or not message:
             return Response({"error": "Все поля должны быть заполнены."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
