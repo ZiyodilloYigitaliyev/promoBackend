@@ -16,31 +16,29 @@ from django.utils import timezone
 
 class PostbackCallbackView(APIView):
     permission_classes = [AllowAny]
-    # def get(self, request):
-    #     postback_requests = PostbackRequest.objects.all()
-    #     serializer = PostbackRequestSerializer(postback_requests, many=True)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def post(self, request, *args, **kwargs):
-        opi = request.query_params.get('opi')
+    def get(self, request, *args, **kwargs):
         msisdn = request.query_params.get('msisdn')
+        opi = request.query_params.get('opi')
         short_number = request.query_params.get('short_number')
-        message = request.query_params.get('message')
+        text = request.query_params.get('message')
 
-        # Tekshiruv va xatoliklarni qayta ishlash
-        if not all([opi, msisdn, short_number, message]):
-            return Response({'error': 'Все поля должны быть заполнены.'}, status=status.HTTP_400_BAD_REQUEST)
+        if msisdn and opi and short_number and text:
+            # Ma'lumotni saqlash
+            data = {
+                'msisdn': msisdn,
+                'opi': opi,
+                'short_number': short_number,
+                'text': text
+            }
+            serializer = PostbackRequestSerializer(data=data)
 
-        # Modelga saqlash
-        PostbackRequest.objects.create(
-            opi=opi,
-            msisdn=msisdn,
-            short_number=short_number,
-            text=message
-        )
-
-        # Response ni qaytarish
-        return Response({'message': 'OK'}, status=status.HTTP_200_OK)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'Data saved successfully'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
 
 #     ********************* Monthly date *************************
 # class PromoMonthlyView(APIView):
