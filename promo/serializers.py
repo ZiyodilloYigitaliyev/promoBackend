@@ -6,7 +6,7 @@ from .models import *
 class PostbackRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostbackRequest
-        fields = ['msisdn', 'opi', 'short_number', 'message']
+        fields = ['msisdn', 'opi', 'short_number', 'text']
 
 
 
