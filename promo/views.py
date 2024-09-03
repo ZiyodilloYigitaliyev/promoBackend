@@ -26,7 +26,7 @@ class PostbackCallbackView(APIView):
         msisdn = request.data.get('msisdn')
         opi = request.data.get('opi')
         short_number = request.data.get('short_number')
-        message = request.data.get('text')
+        message = request.data.get('message')
 
         # Валидация данных
         if not msisdn or not opi or not short_number or not message:
