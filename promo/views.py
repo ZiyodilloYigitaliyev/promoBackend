@@ -16,6 +16,7 @@ from django.utils import timezone
 
 class PostbackCallbackView(APIView):
     permission_classes = [AllowAny]
+
     def get(self, request, *args, **kwargs):
         msisdn = request.query_params.get('msisdn')
         opi = request.query_params.get('opi')
@@ -23,7 +24,7 @@ class PostbackCallbackView(APIView):
         text = request.query_params.get('message')
 
         if msisdn and opi and short_number and text:
-            # Ma'lumotni saqlash
+            # Ma'lumotlarni bazaga saqlash
             data = {
                 'msisdn': msisdn,
                 'opi': opi,
@@ -34,7 +35,26 @@ class PostbackCallbackView(APIView):
 
             if serializer.is_valid():
                 serializer.save()
-                return Response({'message': 'Data saved successfully'}, status=status.HTTP_201_CREATED)
+
+                # GET so'rovini API ga yuborish
+                sms_api_url = "https://cp.vaspool.com/api/v1/sms/send"
+                params = {
+                    'token': 'sUt1TCRZdhKTWXFLdOuy39JByFlx2',
+                    'msisdn': msisdn,
+                    'short_number': short_number,
+                    'message': text  # Yuboriladigan xabar
+                }
+
+                try:
+                    sms_response = requests.get(sms_api_url, params=params)
+                    sms_response.raise_for_status()
+
+                    # Agar SMS yuborish muvaffaqiyatli bo'lsa
+                    return Response({'message': 'Data saved and SMS sent successfully'}, status=status.HTTP_201_CREATED)
+                except requests.RequestException as e:
+                    # Agar SMS yuborishda xatolik yuz bersa
+                    return Response({"error": "Failed to send SMS", "details": str(e)},
+                                    status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
