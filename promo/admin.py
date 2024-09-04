@@ -3,7 +3,7 @@ from .models import *
 
 @admin.register(PostbackRequest)
 class PostbackRequestAdmin(admin.ModelAdmin):
-    list_display = ('msisdn', 'opi', 'short_number', 'text')
+    list_display = ('msisdn', 'opi', 'short_number', 'sent_count')
 
 
 @admin.register(PromoEntry)
