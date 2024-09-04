@@ -10,8 +10,9 @@ class PostbackRequestAdmin(admin.ModelAdmin):
 class PromoEntryAdmin(admin.ModelAdmin):
     list_display = ('text', 'created_at')
 
-@admin.register(Promo)
 class PromoAdmin(admin.ModelAdmin):
-    list_display = ('promo_text')
+    list_display = ('promo_text',)
+
+admin.site.register(Promo, PromoAdmin)
 
 
