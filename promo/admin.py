@@ -5,13 +5,12 @@ from .models import *
 class PostbackRequestAdmin(admin.ModelAdmin):
     list_display = ('msisdn', 'opi', 'short_number', 'sent_count')
 
-
-@admin.register(PromoEntry)
 class PromoEntryAdmin(admin.ModelAdmin):
     list_display = ('text', 'created_at')
+admin.site.register(PromoEntry, PromoEntryAdmin)
 
 class PromoAdmin(admin.ModelAdmin):
-    list_display = ('promo_text',)
+    list_display = ('id','promo_text')
 
 admin.site.register(Promo, PromoAdmin)
 
