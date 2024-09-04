@@ -13,7 +13,7 @@ class PostbackRequestSerializer(serializers.ModelSerializer):
     messages = PromoEntrySerializer(source='promoentry_set', many=True, read_only=True)
     class Meta:
         model = PostbackRequest
-        fields = '__all__'
+        fields = ['id', 'opi', 'msisdn', 'sent_count', 'messages']
 
 
 class PromoSerializer(serializers.ModelSerializer):
