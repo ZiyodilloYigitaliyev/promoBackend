@@ -25,9 +25,8 @@ class PostbackCallbackView(APIView):
 
         if msisdn and opi and short_number and text:
             # Promo modelida promokod mavjudligini tekshirish
-            try:
-                promo = Promo.objects.get(promo_text=text)
-            except Promo.DoesNotExist:
+            promo = Promo.objects.filter(promo_text=text).first()
+            if promo is None:
                 custom_message = "Jo’natilgan Promokod noto’g’ri!"
                 return self.send_sms(msisdn, opi, short_number, custom_message)
 
