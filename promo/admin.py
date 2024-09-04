@@ -10,7 +10,7 @@ class PromoEntryAdmin(admin.ModelAdmin):
 admin.site.register(PromoEntry, PromoEntryAdmin)
 
 class PromoAdmin(admin.ModelAdmin):
-    list_display = ('id','promo_text')
+    list_display = ('id', 'promo_text')
 
 admin.site.register(Promo, PromoAdmin)
 

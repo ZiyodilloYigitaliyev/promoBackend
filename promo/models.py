@@ -9,7 +9,7 @@ class PostbackRequest(models.Model):
     sent_count = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.msisdn} - {self.short_number} - {self.text[:50]}"
+        return f"{self.msisdn} - {self.short_number}"
 
 class PromoEntry(models.Model):
     PostbackRequest = models.ForeignKey(PostbackRequest, on_delete=models.CASCADE)
