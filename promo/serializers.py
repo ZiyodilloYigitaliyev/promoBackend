@@ -3,9 +3,10 @@ from .models import *
 
 
 class PromoEntrySerializer(serializers.ModelSerializer):
+    code = serializers.CharField(source='text')
     class Meta:
         model = PromoEntry
-        fields = '__all__'
+        fields = ['id', 'code', 'created_at']
 
 class PostbackRequestSerializer(serializers.ModelSerializer):
     # entries = PromoEntrySerializer(many=True, read_only=True)
