@@ -5,7 +5,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models.functions import TruncMonth
-from django.db.models import Count
 import calendar
 from datetime import timedelta, datetime
 from rest_framework.viewsets import ViewSet
@@ -27,31 +26,32 @@ class PostbackCallbackView(APIView):
             # Promo kodni tekshirish
             try:
                 promo = get_object_or_404(Promo, promo_text=text)
-                postback_request = PostbackRequest.objects.create(
-                    msisdn=msisdn,
-                    opi=opi,
-                    short_number=short_number,
-                    sent_count=1
-                )
 
-                # PromoEntry ni tekshirish
-                promo_entry, created = PromoEntry.objects.get_or_create(
-                    PostbackRequest=postback_request,
-                    text=text,
-                    defaults={'created_at': timezone.now()}
-                )
-
-                if promo_entry.used:
-                    custom_message = "Quyidagi Promokod avval ro’xatdan o’tgazilgan!"
+                # PromoEntry ni tekshirish, agar oldin ishlatilgan bo'lsa, xabar qaytaradi
+                if PromoEntry.objects.filter(text=text, PostbackRequest__msisdn=msisdn).exists():
+                    custom_message = "Quyidagi Promokod avval ro’yxatdan o’tgazilgan!"
                 else:
-                    promo_entry.used = True
-                    promo_entry.save()
-                    postback_request.sent_count += 1
-                    postback_request.save()
+                    # Yangi PostbackRequest yaratish
+                    postback_request = PostbackRequest.objects.create(
+                        msisdn=msisdn,
+                        opi=opi,
+                        short_number=short_number,
+                        sent_count=1
+                    )
+
+                    # Yangi PromoEntry yaratish
+                    promo_entry = PromoEntry.objects.create(
+                        PostbackRequest=postback_request,
+                        text=text,
+                        created_at=timezone.now(),
+                        used=True
+                    )
+
                     custom_message = (
-                         "Tabriklaymiz! Promokod qabul qilindi!\n"
+                        "Tabriklaymiz! Promokod qabul qilindi!\n"
                         "\"Boriga baraka\" ko'rsatuvini har Juma soat 21:00 da Jonli efirda tomosha qiling!"
                     )
+
             except Promo.DoesNotExist:
                 custom_message = "Jo’natilgan Promokod noto’g’ri!"
 

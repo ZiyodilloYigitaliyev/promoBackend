@@ -15,7 +15,6 @@ class PromoEntry(models.Model):
     PostbackRequest = models.ForeignKey(PostbackRequest, on_delete=models.CASCADE)
     text = models.TextField()  # Abonentdan kelgan xabar
     created_at = models.DateTimeField()  # Ma'lumotlar qo'shilgan vaqt
-    used = models.BooleanField(default=False)
     def __str__(self):
         return self.text
 
