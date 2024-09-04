@@ -36,8 +36,8 @@ class PostbackCallbackView(APIView):
             if serializer.is_valid():
                 serializer.save()
                 custom_message = (
-                    "Promo kodingizni qabul qilindi!\n"
-                    "“Boriga baraka” shousida ishtirok etganingiz uchun tashakkur"
+                    "Tabriklaymiz! Promokod qabul qilindi!\n"
+                        "\"Boriga baraka\" ko'rsatuvini har Juma soat 21:00 da Jonli efirda tomosha qiling!"
                 )
                 # GET so'rovini API ga yuborish
                 sms_api_url = "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2"
