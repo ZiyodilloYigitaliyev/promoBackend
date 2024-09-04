@@ -15,66 +15,65 @@ from django.utils import timezone
 
 class PostbackCallbackView(APIView):
     permission_classes = [AllowAny]
-
     def get(self, request, *args, **kwargs):
         msisdn = request.query_params.get('msisdn')
         opi = request.query_params.get('opi')
         short_number = request.query_params.get('short_number')
         text = request.query_params.get('message')
 
+        custom_message = ""
+
         if msisdn and opi and short_number and text:
-            # Promo kodni tekshirish
+            # Promo modelida promokod mavjudligini tekshirish
             try:
-                promo = get_object_or_404(Promo, promo_text=text)
-
-                # PromoEntry ni tekshirish, agar oldin ishlatilgan bo'lsa, xabar qaytaradi
-                if PromoEntry.objects.filter(text=text, PostbackRequest__msisdn=msisdn).exists():
-                    custom_message = "Quyidagi Promokod avval ro’yxatdan o’tgazilgan!"
-                else:
-                    # Yangi PostbackRequest yaratish
-                    postback_request = PostbackRequest.objects.create(
-                        msisdn=msisdn,
-                        opi=opi,
-                        short_number=short_number,
-                        sent_count=1
-                    )
-
-                    # Yangi PromoEntry yaratish
-                    promo_entry = PromoEntry.objects.create(
-                        PostbackRequest=postback_request,
-                        text=text,
-                        created_at=timezone.now(),
-                        used=True
-                    )
-
-                    custom_message = (
-                        "Tabriklaymiz! Promokod qabul qilindi!\n"
-                        "\"Boriga baraka\" ko'rsatuvini har Juma soat 21:00 da Jonli efirda tomosha qiling!"
-                    )
-
+                promo = Promo.objects.get(promo_text=text)
             except Promo.DoesNotExist:
                 custom_message = "Jo’natilgan Promokod noto’g’ri!"
+                return self.send_sms(msisdn, opi, short_number, custom_message)
 
-            # GET so'rovini API ga yuborish
-            sms_api_url = "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2"
-            params = {
-                'opi': opi,
-                'msisdn': msisdn,
-                'short_number': short_number,
-                'message': custom_message
-            }
+            # PromoEntry modelida ushbu promokod oldin ro'yxatdan o'tganligini tekshirish
+            if PromoEntry.objects.filter(text=text, PostbackRequest__msisdn=msisdn).exists():
+                custom_message = "Quyidagi Promokod avval ro’yxatdan o’tgazilgan!"
+                return self.send_sms(msisdn, opi, short_number, custom_message)
 
-            try:
-                sms_response = requests.get(sms_api_url, params=params)
-                sms_response.raise_for_status()
-                # Agar muvaffaqiyatli bo'lsa
-                return Response({'message': 'Data saved and SMS sent successfully'}, status=status.HTTP_201_CREATED)
-            except requests.RequestException as e:
-                return Response({"error": "Failed to send SMS", "details": str(e)},
-                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Yangi PostbackRequest va PromoEntry yaratish
+            postback_request = PostbackRequest.objects.create(
+                msisdn=msisdn,
+                opi=opi,
+                short_number=short_number,
+                sent_count=1
+            )
 
+            PromoEntry.objects.create(
+                PostbackRequest=postback_request,
+                text=text,
+                created_at=timezone.now()
+            )
+
+            custom_message = (
+                "Tabriklaymiz! Promokod qabul qilindi!\n"
+                "\"Boriga baraka\" ko'rsatuvini har Juma soat 21:00 da Jonli efirda tomosha qiling!"
+            )
+            return self.send_sms(msisdn, opi, short_number, custom_message)
         else:
-            return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Failed to send SMS"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def send_sms(self, msisdn, opi, short_number, custom_message):
+        sms_api_url = "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2"
+        params = {
+            'opi': opi,
+            'msisdn': msisdn,
+            'short_number': short_number,
+            'message': custom_message
+        }
+
+        try:
+            sms_response = requests.get(sms_api_url, params=params)
+            sms_response.raise_for_status()
+            return Response({'message': custom_message}, status=status.HTTP_200_OK)
+        except requests.RequestException as e:
+            return Response({"error": "Failed to send SMS", "details": str(e)},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 #     ********************* Monthly date *************************
 class PromoMonthlyView(APIView):
