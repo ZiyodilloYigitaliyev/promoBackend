@@ -7,10 +7,8 @@ from .views import *
 
 urlpatterns = [
     path('postback-callback/', PostbackCallbackView.as_view()),
-
-    # path('promo-entries/monthly/', PromoMonthlyView.as_view()),
-
-    # path('promo-entries/calculate/', PromoCountViewSet.as_view()),
-    # path('postback-callback/', PostbackCallbackViews.as_view(), name='postback-callback'),
+    path('promo-entries/monthly/', PromoMonthlyView.as_view()),
+    path('promo/', PromoEntryList.as_view()),
+    path('Promo-add/', PromoCreateView.as_views()),
 
 ]

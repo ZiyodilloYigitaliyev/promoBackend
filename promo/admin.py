@@ -6,6 +6,12 @@ class PostbackRequestAdmin(admin.ModelAdmin):
     list_display = ('msisdn', 'opi', 'short_number', 'text')
 
 
+@admin.register(PromoEntry)
+class PromoEntryAdmin(admin.ModelAdmin):
+    list_display = ('text', 'created_at')
 
+@admin.register(Promo)
+class PromoAdmin(admin.ModelAdmin):
+    list_display = ('promo_text')
 
 
