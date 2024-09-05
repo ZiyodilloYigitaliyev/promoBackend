@@ -131,7 +131,6 @@ class PromoMonthlyView(APIView):
                 result = {
                     "month": calendar.month_name[month].lower(),
                     "promos": promos_grouped,
-                    "users": users_in_month.count()
                 }
 
             except ValueError as e:
@@ -188,7 +187,9 @@ class PromoEntryList(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request, *args, **kwargs):
         try:
+            # Barcha PostbackRequest yozuvlarini olish
             postback_requests = PostbackRequest.objects.all()
+            # Serializer orqali ma'lumotlarni qayta ishlash
             serializer = PostbackRequestSerializerSent(postback_requests, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:

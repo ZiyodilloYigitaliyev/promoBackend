@@ -13,13 +13,13 @@ class PostbackRequestSerializer(serializers.ModelSerializer):
         model = PostbackRequest
         fields = '__all__'
 
-class PromoEntrySerializerSent(serializers.ModelSerializer):
-    class Meta:
-        model = PromoEntry
-        fields = ['text', 'created_at']
+# class PromoEntrySerializerSent(serializers.ModelSerializer):
+#     class Meta:
+#         model = PromoEntry
+#         fields = ['text', 'created_at']
 
 class PostbackRequestSerializerSent(serializers.ModelSerializer):
-    promos = PromoEntrySerializerSent(many=True, read_only=True, source='promoentry_set')  # promo ma'lumotlari
+    promos = PromoEntrySerializer(many=True, read_only=True, source='promoentry_set')  # promo ma'lumotlari
 
     class Meta:
         model = PostbackRequest
