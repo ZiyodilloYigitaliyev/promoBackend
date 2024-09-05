@@ -79,9 +79,6 @@ class PromoMonthlyView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """
-        GET so'rovi: Oylik promo ma'lumotlarini qaytaradi.
-        """
         month = request.query_params.get('month')
         year = request.query_params.get('year')
 
@@ -110,9 +107,16 @@ class PromoMonthlyView(APIView):
                 promos_grouped = {}
                 for entry in promos_in_month:
                     postback_request = entry.PostbackRequest
-                    if postback_request not in promos_grouped:
-                        promos_grouped[postback_request] = []
-                    promos_grouped[postback_request].append({
+                    if postback_request.msisdn not in promos_grouped:
+                        promos_grouped[postback_request.msisdn] = {
+                            "sent_count": 0,
+                            "promos": []
+                        }
+
+                    # sent_countni har bir foydalanuvchi uchun orttirish
+                    promos_grouped[postback_request.msisdn]["sent_count"] += 1
+                    # Har bir promo kodni promos ro'yxatiga qo'shish
+                    promos_grouped[postback_request.msisdn]["promos"].append({
                         "id": entry.id,
                         "text": entry.text,
                         "created_at": entry.created_at.isoformat()
@@ -126,13 +130,7 @@ class PromoMonthlyView(APIView):
                 # Natija tuzish
                 result = {
                     "month": calendar.month_name[month].lower(),
-                    "promos": {
-                        postback_request.msisdn: {
-                            "sent_count": len(promos),
-                            "promos": promos
-                        }
-                        for postback_request, promos in promos_grouped.items()
-                    },
+                    "promos": promos_grouped,
                     "users": users_in_month.count()
                 }
 
@@ -161,9 +159,14 @@ class PromoMonthlyView(APIView):
                 promos_grouped = {}
                 for entry in promos_in_month:
                     postback_request = entry.PostbackRequest
-                    if postback_request not in promos_grouped:
-                        promos_grouped[postback_request] = []
-                    promos_grouped[postback_request].append({
+                    if postback_request.msisdn not in promos_grouped:
+                        promos_grouped[postback_request.msisdn] = {
+                            "sent_count": 0,
+                            "promos": []
+                        }
+
+                    promos_grouped[postback_request.msisdn]["sent_count"] += 1
+                    promos_grouped[postback_request.msisdn]["promos"].append({
                         "id": entry.id,
                         "text": entry.text,
                         "created_at": entry.created_at.isoformat()
@@ -175,13 +178,7 @@ class PromoMonthlyView(APIView):
                 ).distinct()
 
                 result[month_name] = {
-                    "promos": {
-                        postback_request.msisdn: {
-                            "sent_count": len(promos),
-                            "promos": promos
-                        }
-                        for postback_request, promos in promos_grouped.items()
-                    },
+                    "promos": promos_grouped,
                     "users": users_in_month.count()
                 }
 
