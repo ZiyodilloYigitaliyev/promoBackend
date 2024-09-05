@@ -15,6 +15,7 @@ from django.utils import timezone
 
 class PostbackCallbackView(APIView):
     permission_classes = [AllowAny]
+
     def get(self, request, *args, **kwargs):
         msisdn = request.query_params.get('msisdn')
         opi = request.query_params.get('opi')
@@ -32,22 +33,36 @@ class PostbackCallbackView(APIView):
 
             # PromoEntry modelida ushbu promokod oldin ro'yxatdan o'tganligini tekshirish
             if PromoEntry.objects.filter(text=text, PostbackRequest__msisdn=msisdn).exists():
-                custom_message = "Quyidagi Promokod avval ro’yxatdan o’tgazilgan!"
+                custom_message = "Quyidagi Promokod avval ro’yxatdan o’tkazilgan!"
                 return self.send_sms(msisdn, opi, short_number, custom_message)
 
-            # Yangi PostbackRequest va PromoEntry yaratish
-            postback_request = PostbackRequest.objects.create(
-                msisdn=msisdn,
-                opi=opi,
-                short_number=short_number,
-                sent_count=1
-            )
+            # Agar msisdn bazada mavjud bo'lsa, faqat sent_count ni oshirish va yangi promo saqlash
+            postback_request = PostbackRequest.objects.filter(msisdn=msisdn).first()
+            if postback_request:
+                # Mavjud PostbackRequest uchun sent_count ni oshirish
+                postback_request.sent_count += 1
+                postback_request.save()
 
-            PromoEntry.objects.create(
-                PostbackRequest=postback_request,
-                text=text,
-                created_at=timezone.now()
-            )
+                # Yangi PromoEntry ni mavjud PostbackRequestga bog'lash
+                PromoEntry.objects.create(
+                    PostbackRequest=postback_request,
+                    text=text,
+                    created_at=timezone.now()
+                )
+            else:
+                # Yangi PostbackRequest va PromoEntry yaratish
+                postback_request = PostbackRequest.objects.create(
+                    msisdn=msisdn,
+                    opi=opi,
+                    short_number=short_number,
+                    sent_count=1
+                )
+
+                PromoEntry.objects.create(
+                    PostbackRequest=postback_request,
+                    text=text,
+                    created_at=timezone.now()
+                )
 
             custom_message = (
                 "Tabriklaymiz! Promokod qabul qilindi!\n"
