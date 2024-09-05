@@ -182,10 +182,13 @@ class PromoMonthlyView(APIView):
 
 class PromoEntryList(APIView):
     permission_classes = [IsAuthenticated]
-    def get(self, request):
-        entries = PromoEntry.objects.all()
-        serializer = PromoEntrySerializer(entries, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request, *args, **kwargs):
+        try:
+            postback_requests = PostbackRequest.objects.all()
+            serializer = PostbackRequestSerializerSent(postback_requests, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
