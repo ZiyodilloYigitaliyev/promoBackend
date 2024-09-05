@@ -77,6 +77,7 @@ class PostbackCallbackView(APIView):
 #     ********************* Monthly date *************************
 class PromoMonthlyView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         """
         GET so'rovi: Oylik promo ma'lumotlarini qaytaradi.
@@ -84,6 +85,7 @@ class PromoMonthlyView(APIView):
         month = request.query_params.get('month')
         year = request.query_params.get('year')
 
+        # Agar month va year parametrlar kiritilgan bo'lsa, o'sha oyni filtrlaymiz
         if month and year:
             try:
                 month = int(month)
@@ -94,24 +96,20 @@ class PromoMonthlyView(APIView):
                 if year < 1900:
                     raise ValueError("Year must be greater than 1900.")
 
+                # Oylik sana oralig'ini yaratish
                 start_date = timezone.make_aware(timezone.datetime(year, month, 1))
                 end_date = timezone.make_aware(
                     timezone.datetime(year, month, calendar.monthrange(year, month)[1], 23, 59, 59))
 
-                # Promo kodlar
+                # Berilgan oy uchun PromoEntry yozuvlarini olish
                 promos_in_month = PromoEntry.objects.filter(
                     created_at__range=(start_date, end_date)
-                ).select_related('postback_request')
+                ).select_related('PostbackRequest')
 
-                # Foydalanuvchilar
-                users_in_month = PostbackRequest.objects.filter(
-                    promoentry__created_at__range=(start_date, end_date)
-                ).distinct()
-
-                # Promolarni guruhlash
+                # PostbackRequest'ni promos bilan bog'lash
                 promos_grouped = {}
                 for entry in promos_in_month:
-                    postback_request = entry.postback_request
+                    postback_request = entry.PostbackRequest
                     if postback_request not in promos_grouped:
                         promos_grouped[postback_request] = []
                     promos_grouped[postback_request].append({
@@ -120,6 +118,12 @@ class PromoMonthlyView(APIView):
                         "created_at": entry.created_at.isoformat()
                     })
 
+                # Foydalanuvchilarni hisoblash
+                users_in_month = PostbackRequest.objects.filter(
+                    promoentry__created_at__range=(start_date, end_date)
+                ).distinct()
+
+                # Natija tuzish
                 result = {
                     "month": calendar.month_name[month].lower(),
                     "promos": {
@@ -131,10 +135,12 @@ class PromoMonthlyView(APIView):
                     },
                     "users": users_in_month.count()
                 }
+
             except ValueError as e:
                 return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Agar month va year kiritilmagan bo'lsa, barcha oylardagi ma'lumotlarni qaytarish
         else:
-            # Agar month va year parametrlar kiritilmagan bo'lsa, barcha oylardagi ma'lumotlarni qaytaradi
             entries = PromoEntry.objects.annotate(month=TruncMonth('created_at')).values('month').distinct()
 
             result = {}
@@ -143,22 +149,18 @@ class PromoMonthlyView(APIView):
                 month_name = month.strftime("%B").lower()
                 start_date = timezone.make_aware(timezone.datetime(month.year, month.month, 1))
                 end_date = timezone.make_aware(
-                    timezone.datetime(month.year, month.month, calendar.monthrange(month.year, month.month)[1], 23, 59, 59))
+                    timezone.datetime(month.year, month.month, calendar.monthrange(month.year, month.month)[1], 23, 59,
+                                      59))
 
-                # Promo kodlar
+                # Promolarni olish
                 promos_in_month = PromoEntry.objects.filter(
                     created_at__range=(start_date, end_date)
-                ).select_related('postback_request')
-
-                # Foydalanuvchilar
-                users_in_month = PostbackRequest.objects.filter(
-                    promoentry__created_at__range=(start_date, end_date)
-                ).distinct()
+                ).select_related('PostbackRequest')
 
                 # Promolarni guruhlash
                 promos_grouped = {}
                 for entry in promos_in_month:
-                    postback_request = entry.postback_request
+                    postback_request = entry.PostbackRequest
                     if postback_request not in promos_grouped:
                         promos_grouped[postback_request] = []
                     promos_grouped[postback_request].append({
@@ -166,6 +168,11 @@ class PromoMonthlyView(APIView):
                         "text": entry.text,
                         "created_at": entry.created_at.isoformat()
                     })
+
+                # Foydalanuvchilarni olish
+                users_in_month = PostbackRequest.objects.filter(
+                    promoentry__created_at__range=(start_date, end_date)
+                ).distinct()
 
                 result[month_name] = {
                     "promos": {
