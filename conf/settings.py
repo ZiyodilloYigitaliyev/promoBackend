@@ -86,7 +86,7 @@ SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = 'DENY'
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Tokenning amal qilish muddati
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),  # Tokenning amal qilish muddati
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Refresh tokenning amal qilish muddati
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
