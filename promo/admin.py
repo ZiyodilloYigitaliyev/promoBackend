@@ -17,7 +17,7 @@ class PromoAdmin(admin.ModelAdmin):
         count = queryset.count()
         queryset.delete()
         self.message_user(request, f"{count} ta promo muvaffaqiyatli o'chirildi.")
-    delete_selected_promos.short_description = 'Tanlangan promolarni o\'chirish'
+    delete_selected_promos.short_description = 'For delete all Promo cods'
 
 admin.site.register(Promo, PromoAdmin)
 
