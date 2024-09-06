@@ -217,28 +217,32 @@ class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Faylni tekshirish
         if 'file' not in request.FILES:
             return Response({"error": "Fayl topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Faylni olish
         file = request.FILES['file']
-
-        # Fayl formati 'txt' ekanligini tekshirish
         if not isinstance(file, InMemoryUploadedFile) or not file.name.endswith('.txt'):
             return Response({"error": "Faqat .txt formatdagi fayllarni yuklang."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Fayldagi ma'lumotlarni UTF-8 formatida o'qish
-            file_content = file.read().decode('utf-8')
+            # Faylning bir qismini kodlash turini aniqlash uchun o'qish
+            raw_data = file.read(1024)
+            result = chardet.detect(raw_data)
+            encoding = result['encoding']
 
-            # Har bir promo kodni yangi qatordan ajratib olish
+            # Faylni aniqlangan kodlash turi bilan to'liq o'qish
+            file.seek(0)  # Fayl pointerini boshiga qaytarish
+            file_content = file.read().decode(encoding)
             promo_codes = file_content.splitlines()
 
-            # Har bir promokodni bazaga saqlash
-            for code in promo_codes:
-                if code.strip():  # Faqat bo'sh bo'lmagan kodlarni saqlash
-                    Promo.objects.create(promo_text=code.strip())
+            # Ma'lumotlarni bo'lib-bo'lib saqlash (batch processing)
+            batch_size = 10000  # Har safar 10,000 ta kodni saqlash
+            for i in range(0, len(promo_codes), batch_size):
+                batch = promo_codes[i:i + batch_size]
+                promo_objects = [Promo(promo_text=code.strip()) for code in batch if code.strip()]
+
+                # Har 10,000 ta promo kodni bazaga saqlash
+                Promo.objects.bulk_create(promo_objects)
 
             return Response({"message": "Promokodlar muvaffaqiyatli saqlandi!"}, status=status.HTTP_201_CREATED)
 
