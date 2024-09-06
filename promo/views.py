@@ -215,31 +215,32 @@ class PromoEntryList(APIView):
 class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def post(self, request):
+        # Yuklangan faylni olish
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'Fayl yuklanmagan'}, status=status.HTTP_400_BAD_REQUEST)
 
-def post(self, request):
-    # Yuklangan faylni olish
-    file = request.FILES.get('file')
-    if not file:
-        return Response({'error': 'Fayl yuklanmagan'}, status=status.HTTP_400_BAD_REQUEST)
+        # Fayldagi ma'lumotlarni kodlash formatini aniqlash va o'qish
+        try:
+            raw_data = file.read()
+            encoding = chardet.detect(raw_data)['encoding']  # Fayl kodlashini aniqlash
+            content = raw_data.decode(encoding)
+            promo_codes = content.splitlines()
+        except Exception as e:
+            return Response({'error': f'Faylni o‘qishda xatolik: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Fayldagi ma'lumotlarni kodlash formatini aniqlash va o'qish
-    try:
-        raw_data = file.read()
-        encoding = chardet.detect(raw_data)['encoding']  # Fayl kodlashini aniqlash
-        content = raw_data.decode(encoding)
-        promo_codes = content.splitlines()
-    except Exception as e:
-        return Response({'error': f'Faylni o‘qishda xatolik: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+        # Promokodlarni bazaga saqlash
+        promo_objects = []
+        for code in promo_codes:
+            promo_objects.append(Promo(promo_text=code))
 
-    # Promokodlarni bazaga saqlash
-    promo_objects = []
-    for code in promo_codes:
-        promo_objects.append(Promo(promo_text=code))
+        # Bulk create yordamida ma'lumotlarni saqlash
+        Promo.objects.bulk_create(promo_objects)
 
-    # Bulk create yordamida ma'lumotlarni saqlash
-    Promo.objects.bulk_create(promo_objects)
+        return Response({'message': 'Promo kodlar muvaffaqiyatli yuklandi!'}, status=status.HTTP_201_CREATED)
 
-    return Response({'message': 'Promo kodlar muvaffaqiyatli yuklandi!'}, status=status.HTTP_201_CREATED)
+
 
 # class PromoCreateView(APIView):
 #     permission_classes = [IsAuthenticated]
