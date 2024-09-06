@@ -103,7 +103,7 @@ CORS_ALLOW_HEADERS = [
     'authorization',
     'x-csrftoken',
     'x-requested-with',
-    'content-encoding',
+    'Content-Encoding',
 ]
 
 CORS_ALLOWED_ORIGINS = [
