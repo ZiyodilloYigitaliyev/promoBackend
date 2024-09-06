@@ -10,7 +10,14 @@ class PromoEntryAdmin(admin.ModelAdmin):
 admin.site.register(PromoEntry, PromoEntryAdmin)
 
 class PromoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'promo_text')
+    list_display = ['promo_text']  # Admin panelda promo matnini ko'rsatish
+    actions = ['delete_selected_promos']
+
+    def delete_selected_promos(self, request, queryset):
+        count = queryset.count()
+        queryset.delete()
+        self.message_user(request, f"{count} ta promo muvaffaqiyatli o'chirildi.")
+    delete_selected_promos.short_description = 'Tanlangan promolarni o\'chirish'
 
 admin.site.register(Promo, PromoAdmin)
 
