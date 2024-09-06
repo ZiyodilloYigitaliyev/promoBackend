@@ -210,11 +210,39 @@ class PromoEntryList(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+
 class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
+
     def post(self, request):
-        serializer = PromoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Faylni request dan olish
+        promo_file = request.FILES.get('promo_file', None)
+
+        if not promo_file:
+            return Response({"error": "Promo kodlarni o'z ichiga olgan faylni yuklang."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Faylni o'qish va string qilib dekodlash
+        try:
+            content = promo_file.read().decode('utf-8')
+            promo_codes = content.splitlines()
+        except Exception as e:
+            return Response({"error": "Faylni o'qishda xatolik yuz berdi."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Har bir promo kodni bazaga saqlash
+        for code in promo_codes:
+            code = code.strip()  # Bo'sh joylarni olib tashlaymiz
+            if code:  # Agar promo kod bo'sh bo'lmasa
+                # Promo kodni bazaga qo'shish
+                Promo.objects.get_or_create(promo_text=code)
+
+        return Response({"message": "Promo kodlar muvaffaqiyatli saqlandi."}, status=status.HTTP_201_CREATED)
+
+# class PromoCreateView(APIView):
+#     permission_classes = [IsAuthenticated]
+#     def post(self, request):
+#         serializer = PromoSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
