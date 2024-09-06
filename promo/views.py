@@ -1,6 +1,7 @@
 import requests
 import chardet
 from rest_framework import viewsets, status
+from django.core.files.storage import default_storage
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -217,23 +218,29 @@ class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        # Fayl mavjudligini tekshirish
         if 'file' not in request.FILES:
             return Response({"error": "Fayl topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
 
         file = request.FILES['file']
+        # Fayl turi va kengaytmasini tekshirish
         if not isinstance(file, InMemoryUploadedFile) or not file.name.endswith('.txt'):
             return Response({"error": "Faqat .txt formatdagi fayllarni yuklang."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Faylning bir qismini kodlash turini aniqlash uchun o'qish
-            raw_data = file.read(1024)
-            result = chardet.detect(raw_data)
-            encoding = result['encoding']
+            # Faylni saqlash
+            file_path = default_storage.save(file.name, file)
 
-            # Faylni aniqlangan kodlash turi bilan to'liq o'qish
-            file.seek(0)  # Fayl pointerini boshiga qaytarish
-            file_content = file.read().decode(encoding)
-            promo_codes = file_content.splitlines()
+            # Faylni o'qish va kodlash turini aniqlash
+            with default_storage.open(file_path, 'rb') as f:
+                raw_data = f.read(1024)
+                result = chardet.detect(raw_data)
+                encoding = result['encoding']
+
+                # Faylni aniqlangan kodlash turi bilan to'liq o'qish
+                f.seek(0)  # Fayl pointerini boshiga qaytarish
+                file_content = f.read().decode(encoding)
+                promo_codes = file_content.splitlines()
 
             # Ma'lumotlarni bo'lib-bo'lib saqlash (batch processing)
             batch_size = 10000  # Har safar 10,000 ta kodni saqlash
@@ -243,6 +250,9 @@ class PromoCreateView(APIView):
 
                 # Har 10,000 ta promo kodni bazaga saqlash
                 Promo.objects.bulk_create(promo_objects)
+
+            # Faylni o'chirish
+            default_storage.delete(file_path)
 
             return Response({"message": "Promokodlar muvaffaqiyatli saqlandi!"}, status=status.HTTP_201_CREATED)
 
