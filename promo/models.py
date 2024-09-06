@@ -11,6 +11,7 @@ class PostbackRequest(models.Model):
     def __str__(self):
         return f"{self.msisdn} - {self.short_number}"
 
+
 class PromoEntry(models.Model):
     PostbackRequest = models.ForeignKey(PostbackRequest, on_delete=models.CASCADE)
     text = models.TextField()  # Abonentdan kelgan xabar

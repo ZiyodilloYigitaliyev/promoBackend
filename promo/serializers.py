@@ -30,5 +30,5 @@ class PostbackRequestSerializerSent(serializers.ModelSerializer):
 class PromoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Promo
-        fields = '__all__'
+        fields = ['promo_text']
 
