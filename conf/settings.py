@@ -98,7 +98,15 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
-CORS_ALLOWED_ORIGINS = list(default_headers) + [
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',
+    'x-csrftoken',
+    'x-requested-with',
+    'content-encoding',
+]
+
+CORS_ALLOWED_ORIGINS = [
     'Content-Encoding',
     "http://localhost:5173",
     "https://main--barakaadmin.netlify.app",
