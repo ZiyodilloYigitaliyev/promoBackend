@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.db.models.functions import TruncMonth
 import calendar
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from datetime import timedelta, datetime
 from rest_framework.viewsets import ViewSet
 
@@ -216,29 +217,36 @@ class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Yuklangan faylni olish
-        file = request.FILES.get('file')
-        if not file:
-            return Response({'error': 'Fayl yuklanmagan'}, status=status.HTTP_400_BAD_REQUEST)
+        # Faylni tekshirish
+        if 'file' not in request.FILES:
+            return Response({"error": "Fayl topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Fayldagi ma'lumotlarni kodlash formatini aniqlash va o'qish
+        # Faylni olish
+        file = request.FILES['file']
+
+        # Fayl formati 'txt' ekanligini tekshirish
+        if not isinstance(file, InMemoryUploadedFile) or not file.name.endswith('.txt'):
+            return Response({"error": "Faqat .txt formatdagi fayllarni yuklang."}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
-            raw_data = file.read()
-            encoding = chardet.detect(raw_data)['encoding']  # Fayl kodlashini aniqlash
-            content = raw_data.decode(encoding)
-            promo_codes = content.splitlines()
+            # Fayldagi ma'lumotlarni UTF-8 formatida o'qish
+            file_content = file.read().decode('utf-8')
+
+            # Har bir promo kodni yangi qatordan ajratib olish
+            promo_codes = file_content.splitlines()
+
+            # Har bir promokodni bazaga saqlash
+            for code in promo_codes:
+                if code.strip():  # Faqat bo'sh bo'lmagan kodlarni saqlash
+                    Promo.objects.create(promo_text=code.strip())
+
+            return Response({"message": "Promokodlar muvaffaqiyatli saqlandi!"}, status=status.HTTP_201_CREATED)
+
+        except UnicodeDecodeError as e:
+            return Response({"error": f"Faylni o‘qishda xatolik: {e}"}, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
-            return Response({'error': f'Faylni o‘qishda xatolik: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Promokodlarni bazaga saqlash
-        promo_objects = []
-        for code in promo_codes:
-            promo_objects.append(Promo(promo_text=code))
-
-        # Bulk create yordamida ma'lumotlarni saqlash
-        Promo.objects.bulk_create(promo_objects)
-
-        return Response({'message': 'Promo kodlar muvaffaqiyatli yuklandi!'}, status=status.HTTP_201_CREATED)
+            return Response({"error": f"Xatolik: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
