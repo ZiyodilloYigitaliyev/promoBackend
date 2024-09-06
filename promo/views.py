@@ -215,28 +215,27 @@ class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Faylni request dan olish
-        promo_file = request.FILES.get('promo_file', None)
+        # Yuklangan faylni olish
+        file = request.FILES.get('file')
+        if not file:
+            return Response({'error': 'Fayl yuklanmagan'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not promo_file:
-            return Response({"error": "Promo kodlarni o'z ichiga olgan faylni yuklang."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Faylni o'qish va string qilib dekodlash
+        # Fayldagi ma'lumotlarni o'qish
         try:
-            content = promo_file.read().decode('utf-8')
+            content = file.read().decode('utf-8')
             promo_codes = content.splitlines()
         except Exception as e:
-            return Response({"error": "Faylni o'qishda xatolik yuz berdi."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f'Faylni o‘qishda xatolik: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Har bir promo kodni bazaga saqlash
+        # Promokodlarni bazaga saqlash
+        promo_objects = []
         for code in promo_codes:
-            code = code.strip()  # Bo'sh joylarni olib tashlaymiz
-            if code:  # Agar promo kod bo'sh bo'lmasa
-                # Promo kodni bazaga qo'shish
-                Promo.objects.get_or_create(promo_text=code)
+            promo_objects.append(Promo(promo_text=code))
 
-        return Response({"message": "Promo kodlar muvaffaqiyatli saqlandi."}, status=status.HTTP_201_CREATED)
+        # Bulk create yordamida ma'lumotlarni saqlash
+        Promo.objects.bulk_create(promo_objects)
+
+        return Response({'message': 'Promo kodlar muvaffaqiyatli yuklandi!'}, status=status.HTTP_201_CREATED)
 
 # class PromoCreateView(APIView):
 #     permission_classes = [IsAuthenticated]
