@@ -217,12 +217,12 @@ class PromoEntryList(APIView):
 class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def post(self, request):
         # JSON ma'lumotni tekshirish
-        if 'file_content' not in request.query_params:
+        if 'file_content' not in request.data:
             return Response({"error": "Fayl mazmuni topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
 
-        file_content = request.query_params['file_content']
+        file_content = request.data['file_content']
 
         try:
             # Fayl kodlash turini aniqlash
@@ -237,8 +237,10 @@ class PromoCreateView(APIView):
             # Promo kodlarni bazada mavjudligini tekshirish
             existing_codes = Promo.objects.filter(promo_text__in=promo_codes).values_list('promo_text', flat=True)
             if existing_codes:
-                return Response({"error": "Ba'zi promo kodlar allaqachon bazada mavjud!", "existing_codes": list(existing_codes)},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    "error": "Ba'zi promo kodlar allaqachon bazada mavjud!",
+                    "existing_codes": list(existing_codes)
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             # Promo kodlarni Promo modeliga saqlash
             batch_size = 10000  # Har safar 10,000 ta kodni saqlash
@@ -247,7 +249,8 @@ class PromoCreateView(APIView):
                 promo_objects = [Promo(promo_text=code.strip()) for code in batch if code.strip()]
                 Promo.objects.bulk_create(promo_objects)  # Har 10,000 ta promo kodni bazaga saqlash
 
-            return Response({"message": "Promo kodlar muvaffaqiyatli bazaga qo'shildi!"}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Promo kodlar muvaffaqiyatli bazaga qo'shildi!"},
+                            status=status.HTTP_201_CREATED)
 
         except UnicodeDecodeError as e:
             return Response({"error": f"Faylni o‘qishda xatolik: {e}"}, status=status.HTTP_400_BAD_REQUEST)
