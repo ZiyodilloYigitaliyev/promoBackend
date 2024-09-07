@@ -108,7 +108,8 @@ CORS_ALLOW_HEADERS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://main--barakaadmin.netlify.app",
+    "https://boriga-baraka-vimv.vercel.app",
+    "http://localhost:8080",
     'https://walrus-app-gwabt.ondigitalocean.app',
 
 ]
