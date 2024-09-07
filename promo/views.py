@@ -238,8 +238,8 @@ class PromoCreateView(APIView):
             batch_size = 10000  # Har safar 10,000 ta kodni saqlash
             total_saved = 0
             total_skipped = 0
-            existing_codes = Promo.objects.filter(promo_text__in=promo_codes).values_list('promo_text', flat=True)
-            existing_codes_set = set(existing_codes)  # Mavjud kodlarni to'plamga aylantiramiz
+            existing_codes_set = set(
+                Promo.objects.values_list('promo_text', flat=True))  # Mavjud kodlarni to'plamga aylantiramiz
 
             for i in range(0, len(promo_codes), batch_size):
                 batch = promo_codes[i:i + batch_size]
@@ -255,6 +255,9 @@ class PromoCreateView(APIView):
                 Promo.objects.bulk_create(promo_objects)
                 total_saved += len(new_codes)  # Saqlangan kodlarni sanab boramiz
 
+                # Mavjud kodlarni yangilaymiz
+                existing_codes_set.update(new_codes)
+
             # Ma'lumot qaytarish
             if total_skipped == 0:
                 return Response(
@@ -265,8 +268,7 @@ class PromoCreateView(APIView):
                     "message": f"Promo kodlarning bir qismi muvaffaqiyatli bazaga qo'shildi!",
                     "details": {
                         "saved": total_saved,
-                        "skipped": total_skipped,
-                        "existing_codes": list(existing_codes_set)
+                        "skipped": total_skipped
                     }
                 }, status=status.HTTP_200_OK)
 
