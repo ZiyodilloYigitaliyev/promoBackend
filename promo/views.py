@@ -226,8 +226,7 @@ class PromoCreateView(APIView):
 
         try:
             # Fayl kodlash turini aniqlash
-            raw_data = file_content.encode('utf-8',
-                                           errors='replace')  # JSON orqali kelgan ma'lumot UTF-8 da bo'lishi kutilmoqda
+            raw_data = file_content.encode('utf-8', errors='replace')
             result = chardet.detect(raw_data)
             encoding = result['encoding']
 
