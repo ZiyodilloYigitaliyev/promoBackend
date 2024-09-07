@@ -234,50 +234,71 @@ class PromoCreateView(APIView):
             file_content = file_content.encode('utf-8').decode(encoding)
             promo_codes = file_content.splitlines()
 
-            # Promo kodlarni tekshirish va saqlash
-            batch_size = 10000  # Har safar 10,000 ta kodni saqlash
-            total_saved = 0
-            total_skipped = 0
-            existing_codes = Promo.objects.filter(promo_text__in=promo_codes).values_list('promo_text', flat=True)
-            existing_codes_set = set(existing_codes)  # Mavjud kodlarni to'plamga aylantiramiz
+            # Promo modelining bo'shligini tekshirish
+            if Promo.objects.count() == 0:
+                # Agar Promo modeli bo'sh bo'lsa, barcha kodlarni saqlash
+                batch_size = 10000  # Har safar 10,000 ta kodni saqlash
+                for i in range(0, len(promo_codes), batch_size):
+                    batch = promo_codes[i:i + batch_size]
 
-            for i in range(0, len(promo_codes), batch_size):
-                batch = promo_codes[i:i + batch_size]
+                    # Promo kodlar uchun Promo obyektlarni yaratamiz
+                    promo_objects = [Promo(promo_text=code.strip()) for code in batch if
+                                     code.strip() and len(code.strip()) <= 25]
 
-                # Yangi kodlarni filtrlaymiz (mavjudlarini tashlab o'tamiz)
-                new_codes = [code.strip() for code in batch if
-                             code.strip() and len(code.strip()) <= 25 and code.strip() not in existing_codes_set]
-                total_skipped += len(batch) - len(new_codes)  # Tashlangan kodlarni sanab boramiz
+                    # Yangi kodlarni bazaga saqlaymiz
+                    Promo.objects.bulk_create(promo_objects)
 
-                # Yangi promo kodlar uchun Promo obyektlarni yaratamiz
-                promo_objects = [Promo(promo_text=code) for code in new_codes]
+                return Response({"message": "Barcha promo kodlar muvaffaqiyatli bazaga qo'shildi!"},
+                                status=status.HTTP_201_CREATED)
 
-                # Yangi kodlarni bazaga saqlaymiz
-                Promo.objects.bulk_create(promo_objects)
-                total_saved += len(new_codes)  # Saqlangan kodlarni sanab boramiz
-
-                # Mavjud kodlarni yangilaymiz
-                existing_codes_set.update(new_codes)
-
-            # Ma'lumot qaytarish
-            if total_skipped == 0:
-                return Response(
-                    {"message": f"Barcha promo kodlar muvaffaqiyatli bazaga qo'shildi! ({total_saved} ta saqlandi)"},
-                    status=status.HTTP_201_CREATED)
             else:
-                return Response({
-                    "message": f"Promo kodlarning bir qismi muvaffaqiyatli bazaga qo'shildi!",
-                    "details": {
-                        "saved": total_saved,
-                        "skipped": total_skipped
-                    }
-                }, status=status.HTTP_200_OK)
+                # Promo modelida mavjud kodlarni tekshirish va saqlash
+                existing_codes = Promo.objects.values_list('promo_text', flat=True)
+                existing_codes_set = set(existing_codes)  # Mavjud kodlarni to'plamga aylantiramiz
+
+                batch_size = 10000  # Har safar 10,000 ta kodni saqlash
+                total_saved = 0
+                total_skipped = 0
+
+                for i in range(0, len(promo_codes), batch_size):
+                    batch = promo_codes[i:i + batch_size]
+
+                    # Yangi kodlarni filtrlaymiz (mavjudlarini tashlab o'tamiz)
+                    new_codes = [code.strip() for code in batch if
+                                 code.strip() and len(code.strip()) <= 25 and code.strip() not in existing_codes_set]
+                    total_skipped += len(batch) - len(new_codes)  # Tashlangan kodlarni sanab boramiz
+
+                    # Yangi promo kodlar uchun Promo obyektlarni yaratamiz
+                    promo_objects = [Promo(promo_text=code) for code in new_codes]
+
+                    # Yangi kodlarni bazaga saqlaymiz
+                    Promo.objects.bulk_create(promo_objects)
+                    total_saved += len(new_codes)  # Saqlangan kodlarni sanab boramiz
+
+                    # Mavjud kodlarni yangilaymiz
+                    existing_codes_set.update(new_codes)
+
+                # Ma'lumot qaytarish
+                if total_skipped == 0:
+                    return Response(
+                        {
+                            "message": f"Barcha promo kodlar muvaffaqiyatli bazaga qo'shildi! ({total_saved} ta saqlandi)"},
+                        status=status.HTTP_201_CREATED)
+                else:
+                    return Response({
+                        "message": f"Promo kodlarning bir qismi muvaffaqiyatli bazaga qo'shildi!",
+                        "details": {
+                            "saved": total_saved,
+                            "skipped": total_skipped
+                        }
+                    }, status=status.HTTP_200_OK)
 
         except UnicodeDecodeError as e:
             return Response({"error": f"Faylni o‘qishda xatolik: {e}"}, status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             return Response({"error": f"Xatolik: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
