@@ -21,7 +21,7 @@ class PromoEntry(models.Model):
         return self.text
 
 class Promo(models.Model):
-    promo_text = models.CharField(max_length=25)
+    promo_text = models.CharField(max_length=100)
 
     def __str__(self):
         return self.promo_text
