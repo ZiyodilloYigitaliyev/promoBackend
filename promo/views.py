@@ -218,43 +218,32 @@ class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Fayl mavjudligini tekshirish
-        if 'file' not in request.FILES:
-            return Response({"error": "Fayl topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
+        # JSON ma'lumotni tekshirish
+        if 'file_content' not in request.data:
+            return Response({"error": "Fayl mazmuni topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
 
-        file = request.FILES['file']
-        # Fayl turi va kengaytmasini tekshirish
-        if not isinstance(file, InMemoryUploadedFile) or not file.name.endswith('.txt'):
-            return Response({"error": "Faqat .txt formatdagi fayllarni yuklang."}, status=status.HTTP_400_BAD_REQUEST)
+        file_content = request.data['file_content']
 
         try:
-            # Faylni saqlash
-            file_path = default_storage.save(file.name, file)
+            # Fayl kodlash turini aniqlash
+            raw_data = file_content.encode('utf-8',
+                                           errors='replace')  # JSON orqali kelgan ma'lumot UTF-8 da bo'lishi kutilmoqda
+            result = chardet.detect(raw_data)
+            encoding = result['encoding']
 
-            # Faylni o'qish va kodlash turini aniqlash
-            with default_storage.open(file_path, 'rb') as f:
-                raw_data = f.read(1024)
-                result = chardet.detect(raw_data)
-                encoding = result['encoding']
+            # Fayl mazmunini aniqlangan kodlash turi bilan to'liq o'qish
+            file_content = file_content.encode('utf-8').decode(encoding)
+            promo_codes = file_content.splitlines()
 
-                # Faylni aniqlangan kodlash turi bilan to'liq o'qish
-                f.seek(0)  # Fayl pointerini boshiga qaytarish
-                file_content = f.read().decode(encoding)
-                promo_codes = file_content.splitlines()
-
-            # Ma'lumotlarni bo'lib-bo'lib saqlash (batch processing)
+            # Promo kodlarni Promo modeliga saqlash
             batch_size = 10000  # Har safar 10,000 ta kodni saqlash
             for i in range(0, len(promo_codes), batch_size):
                 batch = promo_codes[i:i + batch_size]
                 promo_objects = [Promo(promo_text=code.strip()) for code in batch if code.strip()]
+                Promo.objects.bulk_create(promo_objects)  # Har 10,000 ta promo kodni bazaga saqlash
 
-                # Har 10,000 ta promo kodni bazaga saqlash
-                Promo.objects.bulk_create(promo_objects)
-
-            # Faylni o'chirish
-            default_storage.delete(file_path)
-
-            return Response({"message": "Promokodlar muvaffaqiyatli saqlandi!"}, status=status.HTTP_201_CREATED)
+            return Response({"message": "Promo kodlar muvaffaqiyatli bazaga qo'shildi!"},
+                            status=status.HTTP_201_CREATED)
 
         except UnicodeDecodeError as e:
             return Response({"error": f"Faylni o‘qishda xatolik: {e}"}, status=status.HTTP_400_BAD_REQUEST)
