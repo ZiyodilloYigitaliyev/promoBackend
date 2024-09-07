@@ -217,12 +217,12 @@ class PromoEntryList(APIView):
 class PromoCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def get(self, request):
         # JSON ma'lumotni tekshirish
-        if 'file_content' not in request.data:
+        if 'file_content' not in request.query_params:
             return Response({"error": "Fayl mazmuni topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
 
-        file_content = request.data['file_content']
+        file_content = request.query_params['file_content']
 
         try:
             # Fayl kodlash turini aniqlash
@@ -234,6 +234,12 @@ class PromoCreateView(APIView):
             file_content = file_content.encode('utf-8').decode(encoding)
             promo_codes = file_content.splitlines()
 
+            # Promo kodlarni bazada mavjudligini tekshirish
+            existing_codes = Promo.objects.filter(promo_text__in=promo_codes).values_list('promo_text', flat=True)
+            if existing_codes:
+                return Response({"error": "Ba'zi promo kodlar allaqachon bazada mavjud!", "existing_codes": list(existing_codes)},
+                                status=status.HTTP_400_BAD_REQUEST)
+
             # Promo kodlarni Promo modeliga saqlash
             batch_size = 10000  # Har safar 10,000 ta kodni saqlash
             for i in range(0, len(promo_codes), batch_size):
@@ -241,8 +247,7 @@ class PromoCreateView(APIView):
                 promo_objects = [Promo(promo_text=code.strip()) for code in batch if code.strip()]
                 Promo.objects.bulk_create(promo_objects)  # Har 10,000 ta promo kodni bazaga saqlash
 
-            return Response({"message": "Promo kodlar muvaffaqiyatli bazaga qo'shildi!"},
-                            status=status.HTTP_201_CREATED)
+            return Response({"message": "Promo kodlar muvaffaqiyatli bazaga qo'shildi!"}, status=status.HTTP_201_CREATED)
 
         except UnicodeDecodeError as e:
             return Response({"error": f"Faylni o‘qishda xatolik: {e}"}, status=status.HTTP_400_BAD_REQUEST)
@@ -252,11 +257,4 @@ class PromoCreateView(APIView):
 
 
 
-# class PromoCreateView(APIView):
-#     permission_classes = [IsAuthenticated]
-#     def post(self, request):
-#         serializer = PromoSerializer(data=request.data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
