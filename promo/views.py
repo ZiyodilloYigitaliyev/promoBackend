@@ -238,14 +238,15 @@ class PromoCreateView(APIView):
             batch_size = 10000  # Har safar 10,000 ta kodni saqlash
             total_saved = 0
             total_skipped = 0
-            existing_codes_set = set(
-                Promo.objects.values_list('promo_text', flat=True))  # Mavjud kodlarni to'plamga aylantiramiz
+            existing_codes = Promo.objects.filter(promo_text__in=promo_codes).values_list('promo_text', flat=True)
+            existing_codes_set = set(existing_codes)  # Mavjud kodlarni to'plamga aylantiramiz
 
             for i in range(0, len(promo_codes), batch_size):
                 batch = promo_codes[i:i + batch_size]
 
                 # Yangi kodlarni filtrlaymiz (mavjudlarini tashlab o'tamiz)
-                new_codes = [code.strip() for code in batch if code.strip() and code.strip() not in existing_codes_set]
+                new_codes = [code.strip() for code in batch if
+                             code.strip() and len(code.strip()) <= 25 and code.strip() not in existing_codes_set]
                 total_skipped += len(batch) - len(new_codes)  # Tashlangan kodlarni sanab boramiz
 
                 # Yangi promo kodlar uchun Promo obyektlarni yaratamiz
@@ -277,6 +278,7 @@ class PromoCreateView(APIView):
 
         except Exception as e:
             return Response({"error": f"Xatolik: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
