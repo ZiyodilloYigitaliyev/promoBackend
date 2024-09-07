@@ -279,14 +279,14 @@ class PromoCreateView(APIView):
                     existing_codes_set.update(new_codes)
 
                 # Ma'lumot qaytarish
-                if total_skipped == 0:
+                if total_saved > 0:
                     return Response(
-                        {
-                            "message": f"Barcha promo kodlar muvaffaqiyatli bazaga qo'shildi! ({total_saved} ta saqlandi)"},
+                        {"message": f"Barcha promo kodlar muvaffaqiyatli bazaga qo'shildi! ({total_saved} ta saqlandi)",
+                         "details": {"saved": total_saved, "skipped": total_skipped}},
                         status=status.HTTP_201_CREATED)
                 else:
                     return Response({
-                        "message": f"Promo kodlarning bir qismi muvaffaqiyatli bazaga qo'shildi!",
+                        "message": f"Promo kodlarning hech biri bazaga qo'shilmadi!",
                         "details": {
                             "saved": total_saved,
                             "skipped": total_skipped
@@ -298,6 +298,7 @@ class PromoCreateView(APIView):
 
         except Exception as e:
             return Response({"error": f"Xatolik: {e}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 
