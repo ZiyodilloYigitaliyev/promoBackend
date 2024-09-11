@@ -18,7 +18,9 @@ class PromoAdmin(admin.ModelAdmin):
         queryset.delete()
         self.message_user(request, f"{count} ta promo muvaffaqiyatli o'chirildi.")
     delete_selected_promos.short_description = 'For delete all Promo cods'
-
+@admin.register(Promo)
+class PromoAdmin(admin.ModelAdmin):
+    search_fields = ['promo_text']  # Bu yerdagi 'promo_text' - qidiriladigan maydon
 admin.site.register(Promo, PromoAdmin)
 
 
