@@ -4,7 +4,7 @@ from celery import Celery
 from django.conf import settings
 
 # Django konfiguratsiyasini yuklash
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'conf.settings')
 
 app = Celery('promo')
 
