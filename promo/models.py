@@ -27,7 +27,12 @@ class Promo(models.Model):
         return self.promo_text
 
 
+class Notification(models.Model):
+    date = models.DateField()  # Jo'natilish sanasi
+    text = models.TextField()  # Xabar matni
 
+    def __str__(self):
+        return f"Notification for {self.date}"
 
 
 
