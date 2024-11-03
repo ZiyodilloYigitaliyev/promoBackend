@@ -135,8 +135,8 @@ TEMPLATES = [
 
 from celery.schedules import crontab
 # Celery Broker va Result backend sozlamalari
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'redis://:9ea3bd0594d302667612a053c3c690bf4310f8b55a6cb18be5542334fc627873@9717b.openredis.io:19042'
+CELERY_RESULT_BACKEND = 'redis://:9ea3bd0594d302667612a053c3c690bf4310f8b55a6cb18be5542334fc627873@9717b.openredis.io:19042'
 CELERY_BEAT_SCHEDULE = {
     'send-daily-notifications': {
         'task': 'promo.tasks.send_daily_notifications',
