@@ -131,13 +131,14 @@ TEMPLATES = [
     },
 ]
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+
+from celery.schedules import crontab
 
 CELERY_BEAT_SCHEDULE = {
     'send-daily-notifications': {
         'task': 'promo.tasks.send_daily_notifications',
-        'schedule': crontab(hour=14, minute=20),  # Har kuni soat 00:00 da ishga tushadi
+        'schedule': crontab(hour=0, minute=0),  # Har kuni 00:00 da ishga tushadi
     },
 }
 
