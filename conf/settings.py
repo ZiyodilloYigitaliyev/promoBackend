@@ -137,7 +137,7 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
 CELERY_BEAT_SCHEDULE = {
     'send-daily-notifications': {
         'task': 'promo.tasks.send_daily_notifications',
-        'schedule': crontab(hour=14, minute=16),  # Har kuni soat 00:00 da ishga tushadi
+        'schedule': crontab(hour=14, minute=20),  # Har kuni soat 00:00 da ishga tushadi
     },
 }
 
