@@ -4,20 +4,32 @@ from django.utils import timezone
 from .models import PostbackRequest, Notification
 import requests
 
+from django.utils import timezone
+from celery import shared_task
+import requests
+
+
 @shared_task
-def send_daily_notifications():
+def send_notification_on_new_promo_opi_27():
+    # Bugungi sanani olamiz
     today = timezone.now().date()
+
+    # Bugungi sanadan boshlab Notification modelidagi xabarlarni olamiz
     notifications = Notification.objects.filter(date=today)
 
-    for notification in notifications:
-        requests_for_opi_23 = PostbackRequest.objects.filter(opi=23)
+    # Faqat opi=27 bo'lgan va bugun qo'shilgan promo kodlar uchun
+    new_promos_for_opi_27 = PostbackRequest.objects.filter(opi=23, created_at__date=today)
 
-        for request in requests_for_opi_23:
-            sms_api_url = "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2"
-            params = {
-                'opi': request.opi,
-                'msisdn': request.msisdn,
-                'short_number': request.short_number,
-                'message': notification.text
-            }
-            requests.get(sms_api_url, params=params)
+    if new_promos_for_opi_27.exists():
+        # Har bir notification uchun xabar yuborish
+        for notification in notifications:
+            for promo_request in new_promos_for_opi_27:
+                sms_api_url = "https://cp.vaspool.com/api/v1/sms/send?token=sUt1TCRZdhKTWXFLdOuy39JByFlx2"
+                params = {
+                    'opi': promo_request.opi,
+                    'msisdn': promo_request.msisdn,
+                    'short_number': promo_request.short_number,
+                    'message': notification.text
+                }
+                requests.get(sms_api_url, params=params)
+
