@@ -137,12 +137,12 @@ from celery.schedules import crontab
 # Celery Broker va Result backend sozlamalari
 CELERY_BROKER_URL = 'redis://:9ea3bd0594d302667612a053c3c690bf4310f8b55a6cb18be5542334fc627873@9717b.openredis.io:19042'
 CELERY_RESULT_BACKEND = 'redis://:9ea3bd0594d302667612a053c3c690bf4310f8b55a6cb18be5542334fc627873@9717b.openredis.io:19042'
-CELERY_BEAT_SCHEDULE = {
-    'send-daily-notifications': {
-        'task': 'promo.tasks.send_daily_notifications',
-        'schedule': crontab(hour=0, minute=0),  # Har kuni 00:00 da ishga tushadi
-    },
-}
+# CELERY_BEAT_SCHEDULE = {
+#     'send-daily-notifications': {
+#         'task': 'promo.tasks.send_daily_notifications',
+#         'schedule': crontab(hour=0, minute=0),  # Har kuni 00:00 da ishga tushadi
+#     },
+# }
 
 
 # Database
